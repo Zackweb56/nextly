@@ -8,43 +8,122 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
+@theme static {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    --color-primary: #326594;
+    --color-primary-hover: #28527A;
+    --color-navy: #0F2A47;
+    --color-soft-blue: #E3ECF5;
+    --color-warm-gold: #EEC680;
+    --color-light-blue: #7FB0DC;
+    --color-warm-cream: #FBF1E5;
+    --color-warm-white: #FFFEFC;
+    --color-border: #D9E2EA;
+    --color-success: #2F8F6B;
+    --color-warning: #EEC680;
+    --color-danger: #C8503E;
+    --color-muted: #5B6B7D;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    --color-zinc-50: #FFFEFC;
+    --color-zinc-100: #FBF1E5;
+    --color-zinc-200: #D9E2EA;
+    --color-zinc-300: #C4D2DF;
+    --color-zinc-400: #91A5B8;
+    --color-zinc-500: #5B6B7D;
+    --color-zinc-600: #435A70;
+    --color-zinc-700: #2E4962;
+    --color-zinc-800: #1F3B57;
+    --color-zinc-900: #0F2A47;
+    --color-zinc-950: #091D33;
+
+    --color-app-page: var(--app-page);
+    --color-app-surface: var(--app-surface);
+    --color-app-sidebar: var(--app-sidebar);
+    --color-app-border: var(--app-border);
+    --color-app-text: var(--app-text);
+    --color-app-muted: var(--app-muted);
+    --color-accent: var(--app-accent);
+    --color-accent-content: var(--app-accent-content);
+    --color-accent-foreground: var(--app-accent-foreground);
 }
 
 @layer theme {
+    :root {
+        color-scheme: light;
+        --app-page: #F7F9FC;
+        --app-surface: #FFFFFF;
+        --app-sidebar: #FFFFFF;
+        --app-border: #E5EAF0;
+        --app-text: #0F2A47;
+        --app-muted: #5B6B7D;
+        --app-accent: #326594;
+        --app-accent-hover: #28527A;
+        --app-accent-content: #326594;
+        --app-accent-foreground: #FFFFFF;
+        --app-nav-active: #EDF4FA;
+        --app-nav-active-text: #0F2A47;
+    }
+
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        color-scheme: dark;
+        --app-page: #0F2A47;
+        --app-surface: #16324D;
+        --app-sidebar: #0B2036;
+        --app-border: #29435D;
+        --app-text: #F3F6FA;
+        --app-muted: #ADC1D3;
+        --app-accent: #294968;
+        --app-accent-hover: #355574;
+        --app-accent-content: #9FC4E5;
+        --app-accent-foreground: #FFFEFC;
+        --app-nav-active: #1C3B59;
+        --app-nav-active-text: #F3F6FA;
+        --color-accent: var(--app-accent);
+        --color-accent-content: var(--app-accent-content);
+        --color-accent-foreground: var(--app-accent-foreground);
     }
 }
 
 @layer base {
-
     *,
     ::after,
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-border, currentColor);
     }
+}
+
+[data-flux-main] {
+    background-color: var(--app-page);
+    color: var(--app-text);
+}
+
+[data-flux-main][data-flux-main-inset] {
+    background-color: var(--app-surface);
+    border-color: var(--app-border);
+}
+
+[data-flux-sidebar] {
+    border-color: var(--app-border);
+    background-color: var(--app-sidebar);
+}
+
+[data-flux-sidebar-item][data-current],
+[data-flux-navlist-item][data-current] {
+    border-color: transparent !important;
+    background-color: var(--app-nav-active) !important;
+    color: var(--app-nav-active-text) !important;
+}
+
+[data-flux-sidebar-item]:hover:not([data-current]),
+[data-flux-navlist-item]:hover:not([data-current]) {
+    background-color: color-mix(in srgb, var(--app-accent-content) 8%, transparent);
+}
+
+[data-flux-button][class*="text-[var(--color-accent-foreground)]"]:hover {
+    background-color: var(--app-accent-hover);
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {
@@ -58,7 +137,8 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden ring-2 ring-accent ring-offset-2;
+    --tw-ring-offset-color: var(--app-page);
 }
 
 /* \[:where(&)\]:size-4 {
