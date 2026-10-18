@@ -11,3 +11,8 @@ parameters:
         - routes/
 
     level: 7
+    
+    ignoreErrors:
+        # Ignore the Livewire single-file component false positive
+        - identifier: trait.unused
+          path: app/Concerns/ProfileValidationRules.php

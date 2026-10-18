@@ -1,0 +1,28 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#9303
+    [34mall[39m: [
+      [34;4mApp\Models\User[39;24m {#8739
+        [34mid[39m: [35m4[39m,
+        [34mname[39m: [32m"[39m[32mFatima Receptionist[39m[32m"[39m,
+        [34memail[39m: [32m"[39m[32mfatima@alamal.ma[39m[32m"[39m,
+        [34mphone[39m: [32m"[39m[32m+212600000000[39m[32m"[39m,
+        [34mis_platform_owner[39m: [35m0[39m,
+        [34memail_verified_at[39m: [36mnull[39m,
+        #[33mpassword[39m: [32m"[39m\$[32m2y[39m\$[32m12[39m\$[32m5GTkg8P6603iwvjAKnuCYeYlu99tFHLnlFhIBGcGU2OMAV5Pzzn2y[39m[32m"[39m,
+        #[33mtwo_factor_secret[39m: [36mnull[39m,
+        #[33mtwo_factor_recovery_codes[39m: [36mnull[39m,
+        [34mtwo_factor_confirmed_at[39m: [36mnull[39m,
+        #[33mremember_token[39m: [36mnull[39m,
+        [34mcreated_at[39m: [32m"[39m[32m2026-10-18 15:14:04[39m[32m"[39m,
+        [34mupdated_at[39m: [32m"[39m[32m2026-10-18 15:14:04[39m[32m"[39m,
+        [34mpivot[39m: [34;4mIlluminate\Database\Eloquent\Relations\Pivot[39;24m {#8745
+          [34mclinic_id[39m: [35m2[39m,
+          [34muser_id[39m: [35m4[39m,
+          [34mrole[39m: [32m"[39m[32mreceptioniste[39m[32m"[39m,
+          [34mis_active[39m: [35m1[39m,
+          [34mjoined_at[39m: [32m"[39m[32m2026-10-18 15:19:07[39m[32m"[39m,
+          [34mcreated_at[39m: [32m"[39m[32m2026-10-18 15:19:07[39m[32m"[39m,
+          [34mupdated_at[39m: [32m"[39m[32m2026-10-18 15:19:07[39m[32m"[39m,
+        },
+      },
+    ],
+  }
