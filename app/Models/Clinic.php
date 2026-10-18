@@ -6,6 +6,7 @@ use Database\Factories\ClinicFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Clinic extends Model
@@ -58,5 +59,25 @@ class Clinic extends Model
         return $this->belongsToMany(User::class)
             ->withPivot('role', 'is_active', 'joined_at')
             ->withTimestamps();
+    }
+
+    /**
+     * The services offered by the clinic.
+     *
+     * @return HasMany<Service, $this>
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    /**
+     * The patients registered at the clinic.
+     *
+     * @return HasMany<Patient, $this>
+     */
+    public function patients(): HasMany
+    {
+        return $this->hasMany(Patient::class);
     }
 }
