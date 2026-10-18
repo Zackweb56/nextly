@@ -6,6 +6,7 @@ use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
@@ -40,5 +41,15 @@ class Service extends Model
     public function clinic(): BelongsTo
     {
         return $this->belongsTo(Clinic::class);
+    }
+
+    /**
+     * The queue tickets for this service.
+     *
+     * @return HasMany<QueueTicket, $this>
+     */
+    public function queueTickets(): HasMany
+    {
+        return $this->hasMany(QueueTicket::class);
     }
 }
