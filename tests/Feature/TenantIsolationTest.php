@@ -22,8 +22,8 @@ it('isolates roles between clinics using Spatie teams', function () {
 
     // 3. Give the user the 'clinic_admin' role in Clinic A ONLY
     setPermissionsTeamId($clinicA->id);
-    
-    $role = Role::findOrCreate('clinic_admin', 'web'); 
+
+    $role = Role::findOrCreate('clinic_admin', 'web');
     $user->assignRole($role);
 
     // 4. Assertion 1: The user is an admin when context is Clinic A

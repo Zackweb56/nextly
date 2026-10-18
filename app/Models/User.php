@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -14,7 +15,6 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -65,11 +65,13 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     /**
      * The clinics that belong to the user.
+     *
+     * @return BelongsToMany<Clinic, $this>
      */
     public function clinics(): BelongsToMany
     {
         return $this->belongsToMany(Clinic::class)
-                    ->withPivot('role', 'is_active', 'joined_at')
-                    ->withTimestamps();
+            ->withPivot('role', 'is_active', 'joined_at')
+            ->withTimestamps();
     }
 }

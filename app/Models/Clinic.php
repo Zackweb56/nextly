@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Database\Factories\ClinicFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Clinic extends Model
 {
+    /**
+     * @use HasFactory<ClinicFactory>
+     */
     use HasFactory;
+
     use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'name',
@@ -45,11 +50,13 @@ class Clinic extends Model
 
     /**
      * The users that belong to the clinic.
+     *
+     * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-                    ->withPivot('role', 'is_active', 'joined_at')
-                    ->withTimestamps();
+            ->withPivot('role', 'is_active', 'joined_at')
+            ->withTimestamps();
     }
 }
