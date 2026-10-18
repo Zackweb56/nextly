@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -31,22 +29,11 @@ jobs:
         with:
           node-version: '22'
 
-      # 1. Copy .env FIRST
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-      # 2. Create SQLite and modify .env BEFORE composer setup
-      - name: Create SQLite Database
-        run: touch database/database.sqlite
-
-      - name: Configure DB for CI
-        run: |
-          echo "DB_CONNECTION=sqlite" >> .env
-          echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
-
-      # 3. Now run composer setup (it will use the SQLite DB)
-      - name: Setup Application
-        run: composer setup
+      - name: Install Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
       - name: Generate key
         run: php artisan key:generate
@@ -54,6 +41,8 @@ jobs:
       - name: Directory Permissions
         run: chmod -R 777 storage bootstrap/cache
 
-      # 4. Run checks
       - name: Run CI Checks
         run: composer ci:check
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
