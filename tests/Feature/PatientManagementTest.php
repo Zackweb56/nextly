@@ -2,6 +2,7 @@
 
 use App\Models\Clinic;
 use App\Models\Patient;
+use Illuminate\Support\Facades\DB;
 
 it('can register a patient for a clinic', function () {
     $clinic = Clinic::factory()->create();
@@ -47,4 +48,31 @@ it('allows creating a patient without a phone number', function () {
     ]);
 
     expect($patient->phone)->toBeNull();
+});
+
+it('encrypts patient phone and cin but leaves name searchable', function () {
+    $clinic = Clinic::factory()->create();
+
+    $patient = Patient::factory()->create([
+        'clinic_id' => $clinic->id,
+        'name' => 'Ahmed Searchable',
+        'phone' => '+212600000000',
+        'cin' => 'AB123456',
+    ]);
+
+    // 1. Verify the model returns the plain text
+    expect($patient->name)->toBe('Ahmed Searchable');
+    expect($patient->phone)->toBe('+212600000000');
+    expect($patient->cin)->toBe('AB123456');
+
+    // 2. Verify the raw database values
+    $rawDbRecord = DB::table('patients')->find($patient->id);
+
+    // Name should be plain text (searchable)
+    expect($rawDbRecord->name)->toBe('Ahmed Searchable');
+
+    // Phone and CIN should be encrypted
+    expect($rawDbRecord->phone)->not->toBe('+212600000000');
+    expect($rawDbRecord->cin)->not->toBe('AB123456');
+    expect(strlen($rawDbRecord->phone))->toBeGreaterThan(50);
 });

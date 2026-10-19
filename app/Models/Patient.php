@@ -32,6 +32,9 @@ class Patient extends Model
     {
         return [
             'date_of_birth' => 'date',
+            // Encrypt
+            'phone' => 'encrypted',
+            'cin' => 'encrypted',
         ];
     }
 
