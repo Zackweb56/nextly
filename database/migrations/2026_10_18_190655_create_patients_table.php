@@ -28,7 +28,6 @@ return new class extends Migration
 
             // Add an index for searching patients by name or phone within a clinic
             $table->index(['clinic_id', 'name']);
-            $table->index(['clinic_id', 'phone']);
         });
     }
 
