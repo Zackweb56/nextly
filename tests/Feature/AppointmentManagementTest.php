@@ -5,17 +5,27 @@ use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Service;
 use App\Models\User;
+use App\Support\CurrentClinic;
 use Illuminate\Database\QueryException;
 
+beforeEach(function () {
+    $this->clinic = Clinic::factory()->create();
+    $this->user = User::factory()->create();
+    $this->user->clinics()->attach($this->clinic->id, [
+        'role' => 'clinic_admin',
+        'is_active' => true,
+    ]);
+    $this->actingAs($this->user);
+    CurrentClinic::set($this->clinic->id);
+});
+
 it('can schedule an appointment for a patient', function () {
-    $clinic = Clinic::factory()->create();
-    $patient = Patient::factory()->create(['clinic_id' => $clinic->id]);
-    $service = Service::factory()->create(['clinic_id' => $clinic->id]);
+    $patient = Patient::factory()->create();
+    $service = Service::factory()->create();
     $doctor = User::factory()->create();
     $receptionist = User::factory()->create();
 
     $appointment = Appointment::factory()->create([
-        'clinic_id' => $clinic->id,
         'patient_id' => $patient->id,
         'service_id' => $service->id,
         'provider_id' => $doctor->id,
@@ -30,20 +40,17 @@ it('can schedule an appointment for a patient', function () {
 });
 
 it('prevents a doctor from having two appointments at the exact same time', function () {
-    $clinic = Clinic::factory()->create();
     $doctor = User::factory()->create();
     $time = now()->addDay()->setTime(10, 0);
 
     // Patient 1 books at 10:00
     Appointment::factory()->create([
-        'clinic_id' => $clinic->id,
         'provider_id' => $doctor->id,
         'scheduled_at' => $time,
     ]);
 
     // Patient 2 tries to book at exactly 10:00 (should throw a DB error)
     expect(fn () => Appointment::factory()->create([
-        'clinic_id' => $clinic->id,
         'provider_id' => $doctor->id,
         'scheduled_at' => $time,
     ]))->toThrow(QueryException::class);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinic;
 use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,9 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Appointment extends Model
 {
     /** @use HasFactory<AppointmentFactory> */
-    use HasFactory;
-
-    use SoftDeletes;
+    use BelongsToClinic, HasFactory, SoftDeletes;
 
     /** @var list<string> */
     protected $fillable = [
@@ -38,11 +37,11 @@ class Appointment extends Model
         ];
     }
 
-    /** @return BelongsTo<Clinic, $this> */
-    public function clinic(): BelongsTo
-    {
-        return $this->belongsTo(Clinic::class);
-    }
+    // /** @return BelongsTo<Clinic, $this> */
+    // public function clinic(): BelongsTo
+    // {
+    //     return $this->belongsTo(Clinic::class);
+    // }
 
     /** @return BelongsTo<Patient, $this> */
     public function patient(): BelongsTo

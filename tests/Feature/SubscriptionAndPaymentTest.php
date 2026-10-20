@@ -4,26 +4,36 @@ use App\Models\Clinic;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\User;
+use App\Support\CurrentClinic;
+
+beforeEach(function () {
+    $this->clinic = Clinic::factory()->create();
+    $this->user = User::factory()->create();
+    $this->user->clinics()->attach($this->clinic->id, [
+        'role' => 'clinic_admin',
+        'is_active' => true,
+    ]);
+    $this->actingAs($this->user);
+    CurrentClinic::set($this->clinic->id);
+});
 
 it('attaches a subscription to a clinic', function () {
-    $clinic = Clinic::factory()->create();
     $plan = Plan::factory()->create(['name' => 'Pro', 'price' => 300]);
 
     $subscription = Subscription::factory()->create([
-        'clinic_id' => $clinic->id,
         'plan_id' => $plan->id,
         'status' => 'active',
     ]);
 
-    expect($clinic->subscription->id)->toBe($subscription->id);
-    expect($clinic->subscription->plan->name)->toBe('Pro');
+    expect($this->clinic->subscription->id)->toBe($subscription->id);
+    expect($this->clinic->subscription->plan->name)->toBe('Pro');
 });
 
 it('can record a pending payment for a subscription', function () {
     $subscription = Subscription::factory()->create();
 
     $payment = Payment::factory()->create([
-        'clinic_id' => $subscription->clinic_id,
         'subscription_id' => $subscription->id,
         'amount' => 300,
         'status' => 'pending',

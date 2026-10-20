@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Clinic;
 use App\Models\Payment;
 use App\Models\Subscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,7 +19,6 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'clinic_id' => Clinic::factory(),
             'subscription_id' => Subscription::factory(),
             'amount' => 299.00,
             'currency' => 'MAD',

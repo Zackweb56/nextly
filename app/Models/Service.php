@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinic;
 use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,9 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Service extends Model
 {
     /** @use HasFactory<ServiceFactory> */
-    use HasFactory;
-
-    use SoftDeletes;
+    use BelongsToClinic, HasFactory, SoftDeletes;
 
     /** @var list<string> */
     protected $fillable = [
@@ -37,11 +36,11 @@ class Service extends Model
         ];
     }
 
-    /** @return BelongsTo<Clinic, $this> */
-    public function clinic(): BelongsTo
-    {
-        return $this->belongsTo(Clinic::class);
-    }
+    // /** @return BelongsTo<Clinic, $this> */
+    // public function clinic(): BelongsTo
+    // {
+    //     return $this->belongsTo(Clinic::class);
+    // }
 
     /**
      * The queue tickets for this service.

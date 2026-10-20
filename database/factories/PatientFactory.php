@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Clinic;
 use App\Models\Patient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -14,7 +13,6 @@ class PatientFactory extends Factory
     public function definition(): array
     {
         return [
-            'clinic_id' => Clinic::factory(),
             'name' => fake()->name(),
             'phone' => fake()->optional(0.8)->phoneNumber(), // 80% chance of having a phone
             'cin' => fake()->optional(0.5)->regexify('[A-Z]{2}[0-9]{6}'), // Moroccan CIN format

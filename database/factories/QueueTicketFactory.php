@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Clinic;
 use App\Models\QueueTicket;
 use App\Models\Service;
 use App\Models\User;
@@ -19,7 +18,6 @@ class QueueTicketFactory extends Factory
         $code = fake()->randomLetter();
 
         return [
-            'clinic_id' => Clinic::factory(),
             'service_id' => Service::factory(),
             'patient_id' => null,
             'appointment_id' => null,
