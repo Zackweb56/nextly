@@ -63,6 +63,17 @@ class Clinic extends Model
     }
 
     /**
+     * Determine whether the clinic has at least one active administrator.
+     */
+    public function hasActiveAdmin(): bool
+    {
+        return $this->users()
+            ->wherePivot('role', 'clinic_admin')
+            ->wherePivot('is_active', true)
+            ->exists();
+    }
+
+    /**
      * The services offered by the clinic.
      *
      * @return HasMany<Service, $this>

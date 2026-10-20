@@ -2,16 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinic;
 use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property string $status
+ * @property Carbon|null $ends_at
+ * @property Carbon|null $trial_ends_at
+ */
 class Subscription extends Model
 {
     /** @use HasFactory<SubscriptionFactory> */
-    use HasFactory;
+    use BelongsToClinic, HasFactory;
 
     /** @var list<string> */
     protected $fillable = [
@@ -29,11 +36,11 @@ class Subscription extends Model
         ];
     }
 
-    /** @return BelongsTo<Clinic, $this> */
-    public function clinic(): BelongsTo
-    {
-        return $this->belongsTo(Clinic::class);
-    }
+    // /** @return BelongsTo<Clinic, $this> */
+    // public function clinic(): BelongsTo
+    // {
+    //     return $this->belongsTo(Clinic::class);
+    // }
 
     /** @return BelongsTo<Plan, $this> */
     public function plan(): BelongsTo

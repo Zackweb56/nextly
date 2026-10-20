@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinic;
 use Database\Factories\PaymentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     /** @use HasFactory<PaymentFactory> */
-    use HasFactory;
+    use BelongsToClinic, HasFactory;
 
     /** @var list<string> */
     protected $fillable = [
@@ -26,11 +27,11 @@ class Payment extends Model
         ];
     }
 
-    /** @return BelongsTo<Clinic, $this> */
-    public function clinic(): BelongsTo
-    {
-        return $this->belongsTo(Clinic::class);
-    }
+    // /** @return BelongsTo<Clinic, $this> */
+    // public function clinic(): BelongsTo
+    // {
+    //     return $this->belongsTo(Clinic::class);
+    // }
 
     /** @return BelongsTo<Subscription, $this> */
     public function subscription(): BelongsTo

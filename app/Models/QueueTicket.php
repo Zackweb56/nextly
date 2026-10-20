@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinic;
 use Database\Factories\QueueTicketFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class QueueTicket extends Model
 {
     /** @use HasFactory<QueueTicketFactory> */
-    use HasFactory;
+    use BelongsToClinic, HasFactory;
 
     /** @var list<string> */
     protected $fillable = [
@@ -43,11 +44,11 @@ class QueueTicket extends Model
         ];
     }
 
-    /** @return BelongsTo<Clinic, $this> */
-    public function clinic(): BelongsTo
-    {
-        return $this->belongsTo(Clinic::class);
-    }
+    // /** @return BelongsTo<Clinic, $this> */
+    // public function clinic(): BelongsTo
+    // {
+    //     return $this->belongsTo(Clinic::class);
+    // }
 
     /** @return BelongsTo<Service, $this> */
     public function service(): BelongsTo
