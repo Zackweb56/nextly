@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureSubscriptionIsActive;
+use App\Http\Middleware\EnsureUserIsPlatformOwner;
 use App\Http\Middleware\SetCurrentClinic;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'platform_owner' => EnsureUserIsPlatformOwner::class,
+        ]);
+
         $middleware->web(append: [
             SetCurrentClinic::class,
             EnsureSubscriptionIsActive::class,

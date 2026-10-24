@@ -2,21 +2,39 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
+use App\Support\ClinicPermissionCatalog;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Reset cached roles and permissions
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        $this->call(PermissionSeeder::class);
 
-        // Create the global platform owner role (clinic_id is null)
-        Role::findOrCreate('platform_owner', 'web');
+        $previousTeamId = getPermissionsTeamId();
+
+        try {
+            // We clear the team context to create the global role
+            setPermissionsTeamId(null);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            // Create the single global admin role
+            $adminRole = Role::findOrCreate('clinic_admin', 'web');
+
+            // Lock it down
+            $adminRole->forceFill([
+                'clinic_id' => null,
+                'is_system' => true,
+            ])->save();
+
+            // Give it all clinic permissions
+            $adminRole->syncPermissions(ClinicPermissionCatalog::all());
+
+        } finally {
+            setPermissionsTeamId($previousTeamId);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        }
     }
 }

@@ -70,5 +70,6 @@ it('allows clinic staff to view the suspended billing page', function () {
 it('allows platform owners through without an active subscription', function () {
     $this->user->forceFill(['is_platform_owner' => true])->save();
 
-    $this->get(route('dashboard'))->assertOk();
+    $this->get(route('dashboard'))
+        ->assertRedirect(route('owner.dashboard'));
 });

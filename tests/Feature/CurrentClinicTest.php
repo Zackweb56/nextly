@@ -1,9 +1,10 @@
 <?php
 
 use App\Models\Clinic;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\CurrentClinic;
-use Spatie\Permission\Models\Role;
+use Database\Seeders\RoleSeeder;
 
 it('automatically sets the first active clinic in the session', function () {
     $clinic = Clinic::factory()->create(['is_active' => true]);
@@ -50,15 +51,21 @@ it('ignores inactive clinics', function () {
 });
 
 it('sets the spatie team id based on the current clinic', function () {
+    $this->seed(RoleSeeder::class);
+
     $clinic = Clinic::factory()->create();
     $user = User::factory()->create();
     $user->clinics()->attach($clinic->id, ['role' => 'clinic_admin', 'is_active' => true]);
 
     $this->actingAs($user);
 
-    // Create role for this clinic
+    // Assign the global role under this clinic's team context.
     setPermissionsTeamId($clinic->id);
-    Role::create(['name' => 'clinic_admin', 'clinic_id' => $clinic->id]);
+    $role = Role::query()
+        ->whereNull('clinic_id')
+        ->where('name', 'clinic_admin')
+        ->firstOrFail();
+    $user->assignRole($role);
 
     // Reset team id to simulate a fresh request
     setPermissionsTeamId(null);

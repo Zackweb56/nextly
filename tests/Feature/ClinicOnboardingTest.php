@@ -2,9 +2,11 @@
 
 use App\Actions\CreateClinicAction;
 use App\Models\Clinic;
+use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Database\QueryException;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
 
 it('creates a clinic, an admin user, and assigns the clinic_admin role atomically', function () {
@@ -21,10 +23,17 @@ it('creates a clinic, an admin user, and assigns the clinic_admin role atomicall
     $admin = User::where('email', 'ahmed@alamal.ma')->firstOrFail();
     expect($admin->clinics()->firstOrFail()->id)->toBe($clinic->id);
 
-    $role = Role::where('clinic_id', $clinic->id)
+    $role = Role::whereNull('clinic_id')
         ->where('name', 'clinic_admin')
         ->firstOrFail();
     expect((bool) $role->getAttribute('is_system'))->toBeTrue();
+    expect(DB::table('model_has_roles')
+        ->where('role_id', $role->id)
+        ->where('model_id', $admin->id)
+        ->where('model_type', $admin->getMorphClass())
+        ->where('clinic_id', $clinic->id)
+        ->exists())->toBeTrue();
+
     setPermissionsTeamId($clinic->id);
     app(PermissionRegistrar::class)->forgetCachedPermissions();
     $admin->unsetRelation('roles');
@@ -58,9 +67,19 @@ it('detects whether the clinic has an active admin', function () {
     $admin->clinics()->updateExistingPivot($clinic->id, ['is_active' => false]);
 
     expect($clinic->hasActiveAdmin())->toBeFalse();
+
+    $admin->clinics()->updateExistingPivot($clinic->id, ['is_active' => true]);
+    setPermissionsTeamId($clinic->id);
+    $admin->removeRole('clinic_admin');
+
+    expect($clinic->hasActiveAdmin())->toBeFalse();
 });
 
 afterEach(function () {
     setPermissionsTeamId(null);
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
+beforeEach(function () {
+    $this->seed(RoleSeeder::class);
 });

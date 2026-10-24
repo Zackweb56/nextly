@@ -24,6 +24,19 @@ test('users can authenticate using the login screen', function () {
     $this->assertAuthenticated();
 });
 
+test('platform owners are redirected to their owner dashboard after login', function () {
+    $user = User::factory()->create(['is_platform_owner' => true]);
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('owner.dashboard', absolute: false));
+
+    $this->assertAuthenticatedAs($user);
+});
+
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 

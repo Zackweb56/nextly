@@ -1,11 +1,14 @@
 <?php
 
 use App\Models\Clinic;
+use App\Models\Role;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Database\Seeders\RoleSeeder;
 use Spatie\Permission\PermissionRegistrar;
 
 it('isolates roles between clinics using Spatie teams', function () {
+    $this->seed(RoleSeeder::class);
+
     // Clear permission cache to ensure a clean state
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -23,7 +26,10 @@ it('isolates roles between clinics using Spatie teams', function () {
     // 3. Give the user the 'clinic_admin' role in Clinic A ONLY
     setPermissionsTeamId($clinicA->id);
 
-    $role = Role::findOrCreate('clinic_admin', 'web');
+    $role = Role::query()
+        ->whereNull('clinic_id')
+        ->where('name', 'clinic_admin')
+        ->firstOrFail();
     $user->assignRole($role);
 
     // 4. Assertion 1: The user is an admin when context is Clinic A

@@ -19,3 +19,9 @@ test('authenticated users can visit the dashboard', function () {
     $response = $this->get(route('dashboard'));
     $response->assertOk();
 });
+
+test('platform owners visiting the clinic dashboard are redirected to the owner dashboard', function () {
+    $this->actingAs(User::factory()->create(['is_platform_owner' => true]))
+        ->get(route('dashboard'))
+        ->assertRedirect(route('owner.dashboard'));
+});
