@@ -13,33 +13,36 @@ it('allows platform owners to view the plans list', function () {
     $this->actingAs($owner)
         ->get(route('owner.plans.index'))
         ->assertOk()
-        ->assertSee('owner-plans-table')
+        ->assertSee('Professional')
         ->assertSee(__('Billing Interval'));
 });
 
-it('returns plans through the server-side DataTables endpoint', function () {
+it('lists, searches, and sorts plans in the plans table', function () {
     $owner = User::factory()->create(['is_platform_owner' => true]);
     Plan::factory()->create([
         'name' => 'Professional',
         'slug' => 'professional',
+        'price' => '299.00',
         'billing_interval' => 'yearly',
     ]);
+    Plan::factory()->create([
+        'name' => 'Starter',
+        'slug' => 'starter',
+        'price' => '99.00',
+        'billing_interval' => 'monthly',
+    ]);
 
-    $this->actingAs($owner)
-        ->getJson(route('owner.plans.data', [
-            'draw' => 2,
-            'start' => 0,
-            'length' => 10,
-            'search' => ['value' => 'professional'],
-            'order' => [['column' => 0, 'dir' => 'asc']],
-            'columns' => [['data' => 'name']],
-        ]))
-        ->assertOk()
-        ->assertJsonPath('draw', 2)
-        ->assertJsonPath('recordsTotal', 1)
-        ->assertJsonPath('recordsFiltered', 1)
-        ->assertJsonPath('data.0.name', 'Professional')
-        ->assertJsonPath('data.0.status.label', __('Active'));
+    Livewire::actingAs($owner)
+        ->test('pages::owner.plans.index')
+        ->assertSee('Professional')
+        ->assertSee('Starter')
+        ->set('search', 'professional')
+        ->assertSee('Professional')
+        ->assertDontSee('Starter')
+        ->set('search', '')
+        ->call('sort', 'price')
+        ->assertSet('sortBy', 'price')
+        ->assertSet('sortDirection', 'asc');
 });
 
 it('allows platform owners to create a plan', function () {

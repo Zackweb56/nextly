@@ -3,6 +3,7 @@
 use App\Actions\CreateClinicAction;
 use App\Models\Clinic;
 use App\Models\Role;
+use App\Models\Subscription;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Database\QueryException;
@@ -33,6 +34,8 @@ it('creates a clinic, an admin user, and assigns the clinic_admin role atomicall
         ->where('model_type', $admin->getMorphClass())
         ->where('clinic_id', $clinic->id)
         ->exists())->toBeTrue();
+
+    expect(Subscription::withoutGlobalScope('clinic')->where('clinic_id', $clinic->id)->exists())->toBeFalse();
 
     setPermissionsTeamId($clinic->id);
     app(PermissionRegistrar::class)->forgetCachedPermissions();

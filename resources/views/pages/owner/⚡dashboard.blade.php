@@ -44,25 +44,6 @@ new #[Title('Owner Dashboard')] class extends Component {
             ->limit(5)
             ->get();
     }
-
-    /**
-     * @return array<int, array{name: string, city: string, status: array{label: string, tone: string}, created_at: string|null}>
-     */
-    #[Computed]
-    public function recentClinicsTableRows(): array
-    {
-        return $this->recentClinics
-            ->map(fn (Clinic $clinic): array => [
-                'name' => $clinic->name,
-                'city' => $clinic->city ?: '—',
-                'status' => [
-                    'label' => $clinic->is_active ? __('Active') : __('Inactive'),
-                    'tone' => $clinic->is_active ? 'success' : 'danger',
-                ],
-                'created_at' => $clinic->created_at?->format('M j, Y'),
-            ])
-            ->all();
-    }
 }; ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
@@ -88,24 +69,44 @@ new #[Title('Owner Dashboard')] class extends Component {
         </flux:card>
     </div>
 
-    <flux:card>
-        <div class="p-6 pb-0">
+    <flux:card class="space-y-4 rounded-2xl p-6">
+        <div>
             <flux:heading size="lg">{{ __('Recent Clinics') }}</flux:heading>
             <flux:text class="mt-1">{{ __('The five most recently created clinics.') }}</flux:text>
         </div>
 
-        <div class="p-6 pt-4">
-            <x-data-table
-                id="owner-recent-clinics-table"
-                :columns="[
-                    ['data' => 'name', 'title' => __('Name')],
-                    ['data' => 'city', 'title' => __('City')],
-                    ['data' => 'status', 'title' => __('Status'), 'render' => 'badge', 'orderable' => false, 'searchable' => false],
-                    ['data' => 'created_at', 'title' => __('Created')],
-                ]"
-                :rows="$this->recentClinicsTableRows"
-                :order="[3, 'desc']"
-            />
-        </div>
+        <flux:table>
+            <flux:table.columns>
+                <flux:table.column>{{ __('Name') }}</flux:table.column>
+                <flux:table.column>{{ __('City') }}</flux:table.column>
+                <flux:table.column>{{ __('Status') }}</flux:table.column>
+                <flux:table.column>{{ __('Created') }}</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @forelse ($this->recentClinics as $clinic)
+                    <flux:table.row :key="$clinic->id">
+                        <flux:table.cell variant="strong">
+                            <a href="{{ route('owner.clinics.show', $clinic) }}" class="underline underline-offset-4 hover:text-accent-content" wire:navigate>
+                                {{ $clinic->name }}
+                            </a>
+                        </flux:table.cell>
+                        <flux:table.cell>{{ $clinic->city ?: '—' }}</flux:table.cell>
+                        <flux:table.cell>
+                            <span class="app-badge app-badge-{{ $clinic->is_active ? 'success' : 'danger' }}">
+                                {{ $clinic->is_active ? __('Active') : __('Inactive') }}
+                            </span>
+                        </flux:table.cell>
+                        <flux:table.cell>{{ $clinic->created_at?->format('M j, Y') ?? '—' }}</flux:table.cell>
+                    </flux:table.row>
+                @empty
+                    <flux:table.row>
+                        <flux:table.cell colspan="4" class="text-center text-sm text-app-muted py-6">
+                            {{ __('No records found') }}
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforelse
+            </flux:table.rows>
+        </flux:table>
     </flux:card>
 </div>

@@ -3,21 +3,58 @@
 use App\Models\Plan;
 use App\Models\Subscription;
 use Flux\Flux;
-use Illuminate\Validation\Rule;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 new #[Title('Plans')] class extends Component {
+    use WithPagination;
+
+    public string $search = '';
+
+    public string $sortBy = 'name';
+
+    public string $sortDirection = 'asc';
+
     public ?int $planId = null;
+
+    public ?int $deletingPlanId = null;
+
     public string $name = '';
+
     public string $slug = '';
+
     public string $price = '';
+
     public string $billingInterval = 'monthly';
+
     public int $trialDays = 14;
+
     public bool $isActive = true;
+
     public bool $slugManuallyEdited = false;
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function sort(string $column): void
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage();
+    }
 
     public function updatedName(string $name): void
     {
@@ -29,6 +66,24 @@ new #[Title('Plans')] class extends Component {
     public function updatedSlug(): void
     {
         $this->slugManuallyEdited = true;
+    }
+
+    #[Computed]
+    public function plans(): LengthAwarePaginator
+    {
+        return Plan::query()
+            ->when($this->search !== '', function ($query): void {
+                $query->where(function ($q): void {
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('slug', 'like', '%'.$this->search.'%');
+                });
+            })
+            ->when(
+                in_array($this->sortBy, ['name', 'price', 'billing_interval', 'trial_days', 'is_active'], true),
+                fn ($query) => $query->orderBy($this->sortBy, $this->sortDirection),
+                fn ($query) => $query->orderBy('name', 'asc')
+            )
+            ->paginate(10);
     }
 
     public function openCreateModal(): void
@@ -45,7 +100,7 @@ new #[Title('Plans')] class extends Component {
         $this->planId = $plan->id;
         $this->name = $plan->name;
         $this->slug = $plan->slug;
-        $this->price = $plan->price;
+        $this->price = (string) $plan->price;
         $this->billingInterval = $plan->billing_interval;
         $this->trialDays = $plan->trial_days;
         $this->isActive = $plan->is_active;
@@ -95,27 +150,41 @@ new #[Title('Plans')] class extends Component {
         );
 
         $this->resetForm();
-        $this->dispatch('plans-updated');
+    }
+
+    public function confirmDeletePlan(int $planId): void
+    {
+        $this->deletingPlanId = $planId;
+        Flux::modal('confirm-delete-plan')->show();
     }
 
     #[On('plan-delete-confirmed')]
-    public function deletePlan(int $planId): void
+    public function deletePlan(?int $planId = null): void
     {
-        $plan = Plan::query()->findOrFail($planId);
+        $id = $planId ?? $this->deletingPlanId;
+
+        if ($id === null) {
+            return;
+        }
+
+        $plan = Plan::query()->findOrFail($id);
 
         if (Subscription::withoutGlobalScope('clinic')->where('plan_id', $plan->id)->exists()) {
+            Flux::modal('confirm-delete-plan')->close();
             Flux::toast(
                 variant: 'danger',
                 text: __('This plan cannot be deleted because it has subscriptions.'),
             );
+            $this->deletingPlanId = null;
 
             return;
         }
 
         $plan->delete();
+        $this->deletingPlanId = null;
 
+        Flux::modal('confirm-delete-plan')->close();
         Flux::toast(variant: 'success', text: __('Plan deleted successfully.'));
-        $this->dispatch('plans-updated');
     }
 
     private function resetForm(): void
@@ -135,41 +204,112 @@ new #[Title('Plans')] class extends Component {
 }; ?>
 
 <section class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl">{{ __('Plans') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Manage subscription plans available to clinics.') }}</flux:text>
+    <flux:card class="rounded-2xl p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <flux:heading size="xl">{{ __('Plans') }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Manage subscription plans available to clinics.') }}</flux:text>
+            </div>
+
+            <flux:button variant="primary" icon="plus" wire:click="openCreateModal">
+                {{ __('Create Plan') }}
+            </flux:button>
         </div>
-
-        <flux:button variant="primary" icon="plus" wire:click="openCreateModal">
-            {{ __('Create Plan') }}
-        </flux:button>
-    </div>
-
-    <flux:card class="overflow-hidden">
-        <x-data-table
-            id="owner-plans-table"
-            :ajax-url="route('owner.plans.data')"
-            :columns="[
-                ['data' => 'name', 'title' => __('Name'), 'render' => 'plan'],
-                ['data' => 'price', 'title' => __('Price'), 'render' => 'plan-price'],
-                ['data' => 'billing_interval', 'title' => __('Billing Interval')],
-                ['data' => 'trial_days', 'title' => __('Trial Days')],
-                ['data' => 'status', 'title' => __('Status'), 'render' => 'badge', 'orderable' => false, 'searchable' => false],
-                ['data' => 'id', 'title' => __('Actions'), 'render' => 'plan-actions', 'orderable' => false, 'searchable' => false],
-            ]"
-            :order="[0, 'asc']"
-        />
     </flux:card>
 
-    <dialog id="plan-delete-dialog" class="app-table-dialog w-[min(28rem,calc(100%-2rem))] rounded-2xl border border-app-border bg-app-surface p-5 text-app-text shadow-2xl sm:p-6">
-        <h2 class="text-lg font-semibold">{{ __('Confirm plan deletion') }}</h2>
-        <p data-plan-delete-message class="mt-2 text-sm text-app-muted"></p>
-        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button type="button" data-dialog-close class="app-dialog-secondary">{{ __('Cancel') }}</button>
-            <button type="button" data-plan-delete-confirm class="app-dialog-primary">{{ __('Delete Plan') }}</button>
+    <flux:card class="space-y-4 overflow-hidden rounded-2xl p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <flux:heading size="lg">{{ __('All Plans') }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Available subscription tiers and billing models.') }}</flux:text>
+            </div>
+
+            <div class="w-full sm:w-72">
+                <flux:input
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="{{ __('Search plans...') }}"
+                    icon="magnifying-glass"
+                    clearable
+                />
+            </div>
         </div>
-    </dialog>
+
+        <flux:table :paginate="$this->plans">
+            <flux:table.columns>
+                <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortDirection" wire:click="sort('name')">
+                    {{ __('Name') }}
+                </flux:table.column>
+                <flux:table.column sortable :sorted="$sortBy === 'price'" :direction="$sortDirection" wire:click="sort('price')">
+                    {{ __('Price') }}
+                </flux:table.column>
+                <flux:table.column sortable :sorted="$sortBy === 'billing_interval'" :direction="$sortDirection" wire:click="sort('billing_interval')">
+                    {{ __('Billing Interval') }}
+                </flux:table.column>
+                <flux:table.column sortable :sorted="$sortBy === 'trial_days'" :direction="$sortDirection" wire:click="sort('trial_days')">
+                    {{ __('Trial Days') }}
+                </flux:table.column>
+                <flux:table.column>
+                    {{ __('Status') }}
+                </flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @forelse ($this->plans as $plan)
+                    <flux:table.row :key="$plan->id">
+                        <flux:table.cell variant="strong">{{ $plan->name }}</flux:table.cell>
+                        <flux:table.cell>{{ $plan->price }} MAD</flux:table.cell>
+                        <flux:table.cell>{{ ucfirst($plan->billing_interval) }}</flux:table.cell>
+                        <flux:table.cell>{{ $plan->trial_days }}</flux:table.cell>
+                        <flux:table.cell>
+                            <span class="app-badge app-badge-{{ $plan->is_active ? 'success' : 'neutral' }}">
+                                {{ $plan->is_active ? __('Active') : __('Inactive') }}
+                            </span>
+                        </flux:table.cell>
+                        <flux:table.cell class="py-0">
+                            <flux:dropdown>
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"></flux:button>
+                                <flux:menu>
+                                    <flux:menu.item icon="pencil-square" wire:click="editPlan({{ $plan->id }})">
+                                        {{ __('Edit') }}
+                                    </flux:menu.item>
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDeletePlan({{ $plan->id }})">
+                                        {{ __('Delete') }}
+                                    </flux:menu.item>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @empty
+                    <flux:table.row>
+                        <flux:table.cell colspan="6" class="py-8 text-center text-sm text-app-muted">
+                            {{ __('No plans found.') }}
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforelse
+            </flux:table.rows>
+        </flux:table>
+    </flux:card>
+
+    <flux:modal name="confirm-delete-plan" class="w-full max-w-md">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Confirm plan deletion') }}</flux:heading>
+                <flux:text class="mt-2">
+                    {{ __('Are you sure you want to delete this plan? This action cannot be undone.') }}
+                </flux:text>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" wire:click="deletePlan">
+                    {{ __('Delete Plan') }}
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 
     <flux:modal name="plan-form" class="w-full max-w-lg">
         <form wire:submit="savePlan" class="space-y-6">

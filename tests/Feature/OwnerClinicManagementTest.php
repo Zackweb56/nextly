@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Clinic;
+use App\Models\Plan;
 use App\Models\Role;
+use App\Models\Subscription;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Livewire\Livewire;
@@ -15,7 +17,7 @@ it('allows a platform owner to view the clinics list', function () {
     $this->actingAs($owner)
         ->get(route('owner.clinics.index'))
         ->assertOk()
-        ->assertSee('owner-clinics-table');
+        ->assertSee('Northside Clinic');
 });
 
 it('allows a platform owner to create a clinic with an administrator and clinic role', function () {
@@ -92,47 +94,37 @@ it('seeds exactly one global clinic admin role before any clinic exists', functi
         ->and(Role::query()->where('name', 'receptionist')->exists())->toBeFalse();
 });
 
-it('supports server-side clinic search, sorting, and pagination', function () {
+it('supports clinic search, sorting, and pagination in the clinics table', function () {
     $owner = User::factory()->create(['is_platform_owner' => true]);
     Clinic::factory()->create(['name' => 'Alpha Clinic', 'city' => 'Rabat', 'phone' => null]);
     Clinic::factory()->create(['name' => 'Beta Clinic', 'city' => 'Agadir']);
 
-    $this->actingAs($owner)
-        ->getJson(route('owner.clinics.data', [
-            'draw' => 3,
-            'start' => 0,
-            'length' => 10,
-            'search' => ['value' => 'Rabat'],
-            'order' => [['column' => 0, 'dir' => 'asc']],
-            'columns' => [['data' => 'name']],
-        ]))
-        ->assertOk()
-        ->assertJsonPath('draw', 3)
-        ->assertJsonPath('recordsTotal', 2)
-        ->assertJsonPath('recordsFiltered', 1)
-        ->assertJsonPath('data.0.name', 'Alpha Clinic')
-        ->assertJsonPath('data.0.city', 'Rabat')
-        ->assertJsonPath('data.0.phone', '—')
-        ->assertJsonPath('data.0.status_url', route('owner.clinics.status', Clinic::query()->where('name', 'Alpha Clinic')->firstOrFail()));
+    Livewire::actingAs($owner)
+        ->test('pages::owner.clinics.index')
+        ->assertSee('Alpha Clinic')
+        ->assertSee('Beta Clinic')
+        ->set('search', 'Rabat')
+        ->assertSee('Alpha Clinic')
+        ->assertDontSee('Beta Clinic')
+        ->set('search', '')
+        ->call('sort', 'name')
+        ->assertSet('sortBy', 'name');
 });
 
-it('supports sorting by derived clinic table values', function () {
+it('supports sorting by clinic table values', function () {
     $owner = User::factory()->create(['is_platform_owner' => true]);
     Clinic::factory()->create(['name' => 'Alpha Clinic']);
     Clinic::factory()->create(['name' => 'Beta Clinic']);
 
-    foreach (['city', 'phone', 'subscription_status', 'is_active'] as $sortColumn) {
-        $this->actingAs($owner)
-            ->getJson(route('owner.clinics.data', [
-                'order' => [['column' => 0, 'dir' => 'asc']],
-                'columns' => [['data' => $sortColumn]],
-            ]))
-            ->assertOk()
-            ->assertJsonCount(2, 'data');
+    foreach (['name', 'city', 'phone', 'is_active', 'created_at'] as $sortColumn) {
+        Livewire::actingAs($owner)
+            ->test('pages::owner.clinics.index')
+            ->call('sort', $sortColumn)
+            ->assertSet('sortBy', $sortColumn);
     }
 });
 
-it('returns clinic users with their clinic roles and effective permissions', function () {
+it('displays clinic users with their clinic roles and effective permissions in the members modal', function () {
     $owner = User::factory()->create(['is_platform_owner' => true]);
     $clinic = Clinic::factory()->create();
     $member = User::factory()->create(['name' => 'Clinic Member', 'email' => 'member@example.test']);
@@ -149,31 +141,31 @@ it('returns clinic users with their clinic roles and effective permissions', fun
     $role->givePermissionTo($permission);
     $member->assignRole($role);
 
-    $this->actingAs($owner)
-        ->getJson(route('owner.clinics.members', $clinic))
-        ->assertOk()
-        ->assertJsonPath('data.0.name', 'Clinic Member')
-        ->assertJsonPath('data.0.roles.0', 'receptionist')
-        ->assertJsonPath('data.0.permissions.0', 'appointments.view');
+    Livewire::actingAs($owner)
+        ->test('pages::owner.clinics.index')
+        ->call('openMembersModal', $clinic->id)
+        ->assertSet('selectedClinicIdForMembers', $clinic->id)
+        ->assertSee('Clinic Member')
+        ->assertSee('member@example.test')
+        ->assertSee('receptionist')
+        ->assertSee('appointments.view');
 });
 
-it('only accepts whitelisted DataTables sort columns', function () {
+it('only accepts whitelisted sort columns without error', function () {
     $owner = User::factory()->create(['is_platform_owner' => true]);
     Clinic::factory()->create(['name' => 'Alpha Clinic']);
     Clinic::factory()->create(['name' => 'Beta Clinic']);
 
-    $this->actingAs($owner)
-        ->getJson(route('owner.clinics.data', [
-            'order' => [['column' => 0, 'dir' => 'asc']],
-            'columns' => [['data' => 'name; DROP TABLE clinics']],
-        ]))
-        ->assertOk()
-        ->assertJsonCount(2, 'data');
+    Livewire::actingAs($owner)
+        ->test('pages::owner.clinics.index')
+        ->call('sort', 'name; DROP TABLE clinics')
+        ->assertSet('sortBy', 'name; DROP TABLE clinics')
+        ->assertHasNoErrors();
 
     expect(Clinic::query()->count())->toBe(2);
 });
 
-it('does not expose the clinics data endpoint to clinic staff', function () {
+it('does not expose the owner clinics page to clinic staff', function () {
     $clinic = Clinic::factory()->create();
     $staff = User::factory()->create(['is_platform_owner' => false]);
     $staff->clinics()->attach($clinic->id, [
@@ -182,26 +174,48 @@ it('does not expose the clinics data endpoint to clinic staff', function () {
     ]);
 
     $this->actingAs($staff)
-        ->getJson(route('owner.clinics.data'))
-        ->assertRedirect(route('billing.suspended'));
+        ->get(route('owner.clinics.index'))
+        ->assertForbidden();
 });
 
 it('allows a platform owner to suspend and reactivate a clinic', function () {
     $owner = User::factory()->create(['is_platform_owner' => true]);
     $clinic = Clinic::factory()->create(['is_active' => true]);
 
-    $this->actingAs($owner)
-        ->patchJson(route('owner.clinics.status', $clinic))
-        ->assertOk()
-        ->assertJsonPath('is_active', false);
+    Livewire::actingAs($owner)
+        ->test('pages::owner.clinics.index')
+        ->call('confirmToggleStatus', $clinic->id)
+        ->call('toggleClinicStatus')
+        ->assertDispatched('toast-show');
 
     expect($clinic->fresh()->is_active)->toBeFalse();
 
-    $this->patchJson(route('owner.clinics.status', $clinic))
-        ->assertOk()
-        ->assertJsonPath('is_active', true);
+    Livewire::actingAs($owner)
+        ->test('pages::owner.clinics.index')
+        ->call('confirmToggleStatus', $clinic->id)
+        ->call('toggleClinicStatus')
+        ->assertDispatched('toast-show');
 
     expect($clinic->fresh()->is_active)->toBeTrue();
+});
+
+it('displays subscription badge data and created_at in the clinic table', function () {
+    $owner = User::factory()->create(['is_platform_owner' => true]);
+    $plan = Plan::factory()->create(['name' => 'Premium Plan']);
+    $clinicWithSub = Clinic::factory()->create(['name' => 'Subscribed Clinic']);
+    $clinicNoSub = Clinic::factory()->create(['name' => 'Empty Clinic']);
+
+    Subscription::factory()->create([
+        'clinic_id' => $clinicWithSub->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'ends_at' => now()->addMonth(),
+    ]);
+
+    Livewire::actingAs($owner)
+        ->test('pages::owner.clinics.index')
+        ->assertSee('Active - Premium Plan')
+        ->assertSee('No subscription');
 });
 
 afterEach(function () {

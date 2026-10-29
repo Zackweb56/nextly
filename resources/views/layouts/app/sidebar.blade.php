@@ -26,6 +26,9 @@
                         <flux:sidebar.item icon="credit-card" :href="route('owner.plans.index')" :current="request()->routeIs('owner.plans.*')" wire:navigate>
                             {{ __('Plans') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="banknotes" :href="route('owner.payments.index')" :current="request()->routeIs('owner.payments.*')" wire:navigate>
+                            {{ __('Payments') }}
+                        </flux:sidebar.item>
                     @else
                         <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                             {{ __('Dashboard') }}

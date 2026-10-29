@@ -146,7 +146,7 @@ class Clinic extends Model
      */
     public function subscription(): HasOne
     {
-        return $this->hasOne(Subscription::class)->latestOfMany();
+        return $this->hasOne(Subscription::class)->withoutGlobalScope('clinic')->latestOfMany();
     }
 
     /**

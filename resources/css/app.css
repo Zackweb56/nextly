@@ -179,125 +179,6 @@ select:focus[data-flux-control] {
     --tw-ring-offset-color: var(--app-page);
 }
 
-.dt-container {
-    color: var(--app-text);
-    padding: 1rem;
-}
-
-.dt-layout-row {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: space-between;
-    margin: 0.5rem 0 1rem;
-}
-
-.dt-layout-row:last-child {
-    margin: 1rem 0 0.5rem;
-}
-
-.dt-layout-cell {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.dt-search,
-.dt-length {
-    color: var(--app-muted);
-    font-size: 0.875rem;
-}
-
-.dt-search input,
-.dt-length select {
-    background-color: var(--app-surface);
-    border: 1px solid var(--app-border);
-    border-radius: 0.5rem;
-    color: var(--app-text);
-    margin-inline-start: 0.5rem;
-    padding: 0.5rem 0.75rem;
-}
-
-.dt-search input:focus,
-.dt-length select:focus {
-    border-color: var(--app-accent-content);
-    outline: 2px solid color-mix(in srgb, var(--app-accent-content) 30%, transparent);
-    outline-offset: 1px;
-}
-
-.dt-info {
-    color: var(--app-muted);
-    font-size: 0.875rem;
-}
-
-.dt-paging {
-    align-items: center;
-    display: flex;
-    gap: 0.25rem;
-}
-
-.dt-paging .dt-paging-button {
-    background: transparent !important;
-    border: 1px solid transparent !important;
-    border-radius: 0.5rem !important;
-    color: var(--app-text) !important;
-    min-width: 2.25rem;
-    padding: 0.45rem 0.7rem !important;
-}
-
-.dt-paging .dt-paging-button:hover:not(.disabled),
-.dt-paging .dt-paging-button.current {
-    background: var(--app-nav-active) !important;
-    border-color: var(--app-border) !important;
-    color: var(--app-nav-active-text) !important;
-}
-
-.dt-paging .dt-paging-button.disabled {
-    color: var(--app-muted) !important;
-    opacity: 0.5;
-}
-
-table.app-data-table {
-    border-collapse: collapse !important;
-    border-spacing: 0;
-    color: var(--app-text);
-    min-width: 42rem;
-    width: 100% !important;
-}
-
-table.app-data-table thead th {
-    background: var(--app-surface);
-    border-bottom: 1px solid var(--app-border) !important;
-    color: var(--app-muted);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 0.875rem 1rem !important;
-    text-transform: uppercase;
-}
-
-table.app-data-table tbody td {
-    border-bottom: 1px solid var(--app-border) !important;
-    font-size: 0.8125rem;
-    padding: 0.875rem 1rem !important;
-    vertical-align: middle;
-}
-
-table.app-data-table tbody tr {
-    background: var(--app-surface);
-}
-
-table.app-data-table tbody tr:nth-child(even) {
-    background: color-mix(in srgb, var(--app-text) 2%, var(--app-surface));
-}
-
-table.app-data-table.dataTable > tbody > tr:hover > * {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
 .app-table-primary {
     font-weight: 500;
 }
@@ -351,7 +232,7 @@ table.app-data-table.dataTable > tbody > tr:hover > * {
 
 .app-table-icon-button:disabled,
 .app-dialog-primary:disabled {
-    cursor: wait;
+    cursor: not-allowed;
     opacity: 0.6;
 }
 
@@ -433,34 +314,6 @@ table.app-data-table.dataTable > tbody > tr:hover > * {
 }
 
 @media (max-width: 640px) {
-    .dt-container {
-        padding: 0.75rem;
-    }
-
-    .dt-layout-row {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .dt-layout-cell {
-        width: 100%;
-    }
-
-    .dt-search {
-        width: 100%;
-    }
-
-    .dt-search input {
-        box-sizing: border-box;
-        margin: 0.4rem 0 0;
-        width: 100%;
-    }
-
-    table.app-data-table thead th,
-    table.app-data-table tbody td {
-        padding: 0.7rem 0.75rem !important;
-    }
-
     .app-member-card {
         padding: 0.875rem;
     }
