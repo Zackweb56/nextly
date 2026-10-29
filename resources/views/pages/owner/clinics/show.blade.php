@@ -966,13 +966,25 @@ new #[Title('Clinic Billing')] class extends Component
                     <div>
                         <dt class="text-sm text-app-muted">{{ __('Status') }}</dt>
                         <dd class="mt-1">
-                            <span class="app-badge app-badge-{{ match ($this->currentSubscription->status) {
-                                'active' => 'success',
-                                'trialing' => 'warning',
-                                'past_due', 'cancelled' => 'danger',
-                                default => 'warning',
-                            } }}">
-                                {{ __(str_replace('_', ' ', ucfirst($this->currentSubscription->status))) }}
+                            @php
+                                $statusLabel = match ($this->currentSubscription->status) {
+                                    'active'    => __('Active'),
+                                    'trialing'  => __('Trial'),
+                                    'past_due'  => __('Past due'),
+                                    'cancelled' => __('Cancelled'),
+                                    default     => __(str_replace('_', ' ', ucfirst($this->currentSubscription->status))),
+                                };
+                                
+                                $statusTone = match ($this->currentSubscription->status) {
+                                    'active'    => 'success',
+                                    'trialing'  => 'warning',
+                                    'past_due', 'cancelled' => 'danger',
+                                    default     => 'warning',
+                                };
+                            @endphp
+
+                            <span class="app-badge app-badge-{{ $statusTone }}">
+                                {{ $statusLabel }}
                             </span>
                         </dd>
                     </div>
@@ -981,7 +993,7 @@ new #[Title('Clinic Billing')] class extends Component
                         {{-- Assigned At (formerly First Subscribed) --}}
                         <dt class="text-sm text-app-muted">{{ __('Assigned At') }}</dt>
                         <dd class="mt-1 font-medium">
-                            {{ $this->currentSubscription->created_at?->format('M j, Y g:i A') ?? __('Not available') }}
+                            {{ $this->currentSubscription->created_at?->format('d/m/Y H:i') ?? __('Not available') }}
                         </dd>
 
                         {{-- Current Billing Period --}}
@@ -992,9 +1004,9 @@ new #[Title('Clinic Billing')] class extends Component
                                     : __('Current Billing Period') }}
                             </dt>
                             <dd class="mt-1 font-medium">
-                                {{ $this->currentPeriod['start']->format('M j, Y g:i A') }}
+                                {{ $this->currentPeriod['start']->format('d/m/Y H:i') }}
                                 &ndash;
-                                {{ $this->currentPeriod['end']->format('M j, Y g:i A') }}
+                                {{ $this->currentPeriod['end']->format('d/m/Y H:i') }}
                             </dd>
                         @endif
                     </div>
@@ -1039,9 +1051,9 @@ new #[Title('Clinic Billing')] class extends Component
                                 <span class="app-badge app-badge-info">{{ __('Prepaid') }}</span>
                             </dt>
                             <dd class="mt-1 font-medium">
-                                {{ $this->nextPeriod['start']->format('M j, Y') }}
+                                {{ $this->nextPeriod['start']->format('d/m/Y') }}
                                 &ndash;
-                                {{ $this->nextPeriod['end']->format('M j, Y') }}
+                                {{ $this->nextPeriod['end']->format('d/m/Y') }}
                             </dd>
                         </div>
                     @endif
@@ -1079,7 +1091,7 @@ new #[Title('Clinic Billing')] class extends Component
                 @php
                     $cycleEndDate = ($this->currentSubscription->status === 'trialing'
                         ? $this->currentSubscription->trial_ends_at
-                        : $this->currentSubscription->ends_at)?->format('M j, Y') ?? '—';
+                        : $this->currentSubscription->ends_at)?->format('d/m/Y') ?? '—';
                 @endphp
                 <flux:callout variant="warning" icon="information-circle">
                     {{ __('Plan is locked until the current billing cycle ends on :date. To change plans, you must wait until the cycle ends or cancel the subscription manually.', ['date' => $cycleEndDate]) }}
@@ -1168,7 +1180,7 @@ new #[Title('Clinic Billing')] class extends Component
                         </flux:table.cell>
                         <flux:table.cell>
                             @if ($payment->period_starts_at && $payment->period_ends_at)
-                                {{ $payment->period_starts_at->format('M j, Y') }} - {{ $payment->period_ends_at->format('M j, Y') }}
+                                {{ $payment->period_starts_at->format('d/m/Y') }} - {{ $payment->period_ends_at->format('d/m/Y') }}
                             @else
                                 &mdash;
                             @endif
@@ -1181,9 +1193,9 @@ new #[Title('Clinic Billing')] class extends Component
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>{{ $payment->reference ?: '—' }}</flux:table.cell>
-                        <flux:table.cell>{{ $payment->created_at?->format('M j, Y g:i A') ?? '—' }}</flux:table.cell>
+                        <flux:table.cell>{{ $payment->created_at?->format('d/m/Y H:i') ?? '—' }}</flux:table.cell>
                         <flux:table.cell>
-                            {{ $payment->paid_at?->format('M j, Y g:i A') ?? '—' }}
+                            {{ $payment->paid_at?->format('d/m/Y H:i') ?? '—' }}
                         </flux:table.cell>
                         {{-- NEW ACTIONS CELL --}}
                         <flux:table.cell class="py-0">

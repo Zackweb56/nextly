@@ -259,7 +259,7 @@ new #[Title('Plans')] class extends Component {
                     <flux:table.row :key="$plan->id">
                         <flux:table.cell variant="strong">{{ $plan->name }}</flux:table.cell>
                         <flux:table.cell>{{ $plan->price }} MAD</flux:table.cell>
-                        <flux:table.cell>{{ ucfirst($plan->billing_interval) }}</flux:table.cell>
+                        <flux:table.cell>{{ __(ucfirst($plan->billing_interval)) }}</flux:table.cell>
                         <flux:table.cell>{{ $plan->trial_days }}</flux:table.cell>
                         <flux:table.cell>
                             <span class="app-badge app-badge-{{ $plan->is_active ? 'success' : 'neutral' }}">

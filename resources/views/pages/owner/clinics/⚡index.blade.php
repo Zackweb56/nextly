@@ -339,7 +339,7 @@ new #[Title('Clinics')] class extends Component {
                                 {{ $clinic->is_active ? __('Active') : __('Suspended') }}
                             </span>
                         </flux:table.cell>
-                        <flux:table.cell>{{ $clinic->created_at?->format('M j, Y g:i A') ?? '—' }}</flux:table.cell>
+                        <flux:table.cell>{{ $clinic->created_at?->format('d/m/Y H:i') ?? '—' }}</flux:table.cell>
                         <flux:table.cell class="py-0">
                             <flux:dropdown>
                                 <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"></flux:button>

@@ -159,7 +159,7 @@ it('lists global payments with status filtering', function () {
 
     $this->actingAs($owner)->get(route('owner.payments.index'))
         ->assertOk()
-        ->assertSee('Create Payment');
+        ->assertSee(__('Create Payment'));
 });
 
 it('blocks creating a payment invoice when the clinic already has a pending payment', function () {
@@ -183,7 +183,7 @@ it('blocks creating a payment invoice when the clinic already has a pending paym
         ->set('createClinicId', $clinic->id)
         ->set('createPaymentAmount', '225.75')
         ->call('createPayment')
-        ->assertHasErrors(['createClinicId' => 'This clinic already has a pending invoice. Please mark it as paid first.']);
+        ->assertHasErrors(['createClinicId' => __('This clinic already has a pending invoice. Please mark it as paid first.')]);
 
     expect(Payment::withoutGlobalScope('clinic')->where('clinic_id', $clinic->id)->count())->toBe(1);
 });
@@ -284,17 +284,17 @@ it('renders page head and content in cards with rounded-2xl across clinics, plan
     $this->actingAs($owner)->get(route('owner.clinics.index'))
         ->assertOk()
         ->assertSee('rounded-2xl')
-        ->assertSee('Create Clinic');
+        ->assertSee(__('Create Clinic'));
 
     $this->actingAs($owner)->get(route('owner.plans.index'))
         ->assertOk()
         ->assertSee('rounded-2xl')
-        ->assertSee('Create Plan');
+        ->assertSee(__('Create Plan'));
 
     $this->actingAs($owner)->get(route('owner.payments.index'))
         ->assertOk()
         ->assertSee('rounded-2xl')
-        ->assertSee('Create Payment');
+        ->assertSee(__('Create Payment'));
 });
 
 it('shows mark as paid and delete actions for pending payments and hides them for paid payments', function () {

@@ -97,7 +97,7 @@ new #[Title('Owner Dashboard')] class extends Component {
                                 {{ $clinic->is_active ? __('Active') : __('Inactive') }}
                             </span>
                         </flux:table.cell>
-                        <flux:table.cell>{{ $clinic->created_at?->format('M j, Y') ?? '—' }}</flux:table.cell>
+                        <flux:table.cell>{{ $clinic->created_at?->format('d/m/Y') ?? '—' }}</flux:table.cell>
                     </flux:table.row>
                 @empty
                     <flux:table.row>

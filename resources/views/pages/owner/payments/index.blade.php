@@ -503,7 +503,7 @@ new #[Title('Payments')] class extends Component
                         {{-- NEW CELL --}}
                         <flux:table.cell>
                             @if ($payment->period_starts_at && $payment->period_ends_at)
-                                {{ $payment->period_starts_at->format('M j, Y') }} - {{ $payment->period_ends_at->format('M j, Y') }}
+                                {{ $payment->period_starts_at->format('d/m/Y') }} - {{ $payment->period_ends_at->format('d/m/Y') }}
                             @else
                                 &mdash;
                             @endif
@@ -518,10 +518,10 @@ new #[Title('Payments')] class extends Component
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>{{ $payment->reference ?: '—' }}</flux:table.cell>
-                        <flux:table.cell>{{ $payment->created_at?->format('M j, Y g:i A') ?? '—' }}</flux:table.cell>
+                        <flux:table.cell>{{ $payment->created_at?->format('d/m/Y H:i') ?? '—' }}</flux:table.cell>
                         <flux:table.cell>
                             @if ($payment->paid_at)
-                                {{ $payment->paid_at->format('M j, Y g:i A') }}
+                                {{ $payment->paid_at->format('d/m/Y H:i') }}
                             @elseif ($payment->status === 'pending')
                                 @php
                                     $subEnds = $payment->subscription?->ends_at;
@@ -529,14 +529,14 @@ new #[Title('Payments')] class extends Component
                                 @endphp
                                 @if ($diff !== null)
                                     @if ($diff >= 0)
-                                        <span class="text-xs font-medium text-warning" title="{{ __('Due by :date', ['date' => $subEnds->format('M j, Y')]) }}">
+                                        <span class="text-xs font-medium text-warning" title="{{ __('Due by :date', ['date' => $subEnds->format('d/m/Y')]) }}">
                                             {{ $diff === 0 ? __('Due today') : __('Due in :days day(s)', ['days' => $diff]) }}
-                                            <span class="block font-normal text-app-muted">{{ $subEnds->format('M j, Y') }}</span>
+                                            <span class="block font-normal text-app-muted">{{ $subEnds->format('d/m/Y') }}</span>
                                         </span>
                                     @else
                                         <span class="text-xs font-medium text-danger" title="{{ __('Overdue by :days day(s)', ['days' => abs($diff)]) }}">
                                             {{ __('Overdue · :days day(s) ago', ['days' => abs($diff)]) }}
-                                            <span class="block font-normal text-app-muted">{{ $subEnds->format('M j, Y') }}</span>
+                                            <span class="block font-normal text-app-muted">{{ $subEnds->format('d/m/Y') }}</span>
                                         </span>
                                     @endif
                                 @else

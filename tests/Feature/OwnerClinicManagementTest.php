@@ -214,8 +214,8 @@ it('displays subscription badge data and created_at in the clinic table', functi
 
     Livewire::actingAs($owner)
         ->test('pages::owner.clinics.index')
-        ->assertSee('Active - Premium Plan')
-        ->assertSee('No subscription');
+        ->assertSee(__('Active').' - Premium Plan')
+        ->assertSee(__('No subscription'));
 });
 
 afterEach(function () {
