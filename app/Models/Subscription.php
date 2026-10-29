@@ -12,8 +12,10 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property string $status
+ * @property Carbon|null $starts_at
  * @property Carbon|null $ends_at
  * @property Carbon|null $trial_ends_at
+ * @property Carbon|null $cancelled_at
  */
 class Subscription extends Model
 {
@@ -52,5 +54,42 @@ class Subscription extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function isTrialing(): bool
+    {
+        return $this->status === 'trialing'
+            && $this->trial_ends_at !== null
+            && $this->trial_ends_at->isFuture();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active'
+            && ($this->ends_at === null || $this->ends_at->isFuture());
+    }
+
+    public function onGracePeriod(): bool
+    {
+        return $this->status === 'cancelled'
+            && $this->ends_at !== null
+            && $this->ends_at->isFuture();
+    }
+
+    public function isPastDue(): bool
+    {
+        if ($this->status === 'past_due') {
+            return true;
+        }
+
+        if ($this->status === 'trialing' && $this->trial_ends_at?->isPast()) {
+            return true;
+        }
+
+        if ($this->status === 'active' && $this->ends_at?->isPast()) {
+            return true;
+        }
+
+        return false;
     }
 }

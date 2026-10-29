@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\JoinClause;
+use Illuminate\Support\Facades\DB;
 
 class Clinic extends Model
 {
@@ -67,9 +69,33 @@ class Clinic extends Model
      */
     public function hasActiveAdmin(): bool
     {
-        return $this->users()
-            ->wherePivot('role', 'clinic_admin')
-            ->wherePivot('is_active', true)
+        $modelHasRolesTable = config('permission.table_names.model_has_roles', 'model_has_roles');
+        $rolePivotKey = config('permission.column_names.role_pivot_key') ?: 'role_id';
+        $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
+        $teamForeignKey = config('permission.column_names.team_foreign_key', 'team_id');
+
+        $rolesTable = config('permission.table_names.roles', 'roles');
+
+        return DB::table('clinic_user')
+            // 1. Join the pivot table for users and roles
+            ->join($modelHasRolesTable, function (JoinClause $join) use ($modelHasRolesTable, $modelMorphKey, $teamForeignKey): void {
+                $join
+                    ->on("$modelHasRolesTable.$modelMorphKey", '=', 'clinic_user.user_id')
+                    ->where("$modelHasRolesTable.model_type", (new User)->getMorphClass())
+                    // Ensure the role assignment is scoped to THIS clinic
+                    ->where("$modelHasRolesTable.$teamForeignKey", $this->getKey());
+            })
+            // 2. Join the roles table
+            ->join($rolesTable, "$modelHasRolesTable.$rolePivotKey", '=', "$rolesTable.id")
+
+            // 3. Filter conditions
+            ->where('clinic_user.clinic_id', $this->getKey())
+            ->where('clinic_user.is_active', true)
+
+            // The role is now global (clinic_id is null in roles table)
+            ->whereNull("$rolesTable.$teamForeignKey")
+            ->where("$rolesTable.name", 'clinic_admin')
+
             ->exists();
     }
 
@@ -120,7 +146,7 @@ class Clinic extends Model
      */
     public function subscription(): HasOne
     {
-        return $this->hasOne(Subscription::class)->latestOfMany();
+        return $this->hasOne(Subscription::class)->withoutGlobalScope('clinic')->latestOfMany();
     }
 
     /**

@@ -159,15 +159,15 @@ new class extends Component {
 >
         <div class="space-y-6">
             <div class="flex flex-col items-center space-y-4">
-                <div class="p-0.5 w-auto rounded-full border border-stone-100 dark:border-stone-600 bg-white dark:bg-stone-800 shadow-sm">
-                    <div class="p-2.5 rounded-full border border-stone-200 dark:border-stone-600 overflow-hidden bg-stone-100 dark:bg-stone-200 relative">
-                        <div class="flex items-stretch absolute inset-0 w-full h-full divide-x [&>div]:flex-1 divide-stone-200 dark:divide-stone-300 justify-around opacity-50">
+                <div class="w-auto rounded-full border border-app-border bg-app-surface p-0.5 shadow-sm">
+                    <div class="relative overflow-hidden rounded-full border border-app-border bg-zinc-100 p-2.5 dark:bg-zinc-700">
+                        <div class="absolute inset-0 flex h-full w-full items-stretch justify-around divide-x divide-zinc-200 opacity-50 [&>div]:flex-1 dark:divide-zinc-600">
                             @for ($i = 1; $i <= 5; $i++)
                                 <div></div>
                             @endfor
                         </div>
 
-                        <div class="flex flex-col items-stretch absolute w-full h-full divide-y [&>div]:flex-1 inset-0 divide-stone-200 dark:divide-stone-300 justify-around opacity-50">
+                        <div class="absolute inset-0 flex h-full w-full flex-col items-stretch justify-around divide-y divide-zinc-200 opacity-50 [&>div]:flex-1 dark:divide-zinc-600">
                             @for ($i = 1; $i <= 5; $i++)
                                 <div></div>
                             @endfor
@@ -225,9 +225,9 @@ new class extends Component {
                 @enderror
 
                 <div class="flex justify-center">
-                    <div class="relative w-64 overflow-hidden border rounded-lg border-stone-200 dark:border-stone-700 aspect-square">
+                    <div class="relative w-64 overflow-hidden rounded-lg border border-app-border aspect-square">
                         @empty($qrCodeSvg)
-                            <div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-stone-700 animate-pulse">
+                            <div class="absolute inset-0 flex animate-pulse items-center justify-center bg-app-surface">
                                 <flux:icon.loading/>
                             </div>
                         @else
@@ -256,8 +256,8 @@ new class extends Component {
 
                 <div class="space-y-4">
                     <div class="relative flex items-center justify-center w-full">
-                        <div class="absolute inset-0 w-full h-px top-1/2 bg-stone-200 dark:bg-stone-600"></div>
-                        <span class="relative px-2 text-sm bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400">
+                        <div class="absolute inset-0 top-1/2 h-px w-full bg-app-border"></div>
+                        <span class="relative bg-app-surface px-2 text-sm text-app-muted">
                             {{ __('or, enter the code manually') }}
                         </span>
                     </div>
@@ -277,9 +277,9 @@ new class extends Component {
                             }
                         }"
                     >
-                        <div class="flex items-stretch w-full border rounded-xl dark:border-stone-700">
+                        <div class="flex w-full items-stretch rounded-xl border border-app-border">
                             @empty($manualSetupKey)
-                                <div class="flex items-center justify-center w-full p-3 bg-stone-100 dark:bg-stone-700">
+                                <div class="flex w-full items-center justify-center bg-app-surface p-3">
                                     <flux:icon.loading variant="mini"/>
                                 </div>
                             @else
@@ -287,18 +287,18 @@ new class extends Component {
                                     type="text"
                                     readonly
                                     value="{{ $manualSetupKey }}"
-                                    class="w-full p-3 bg-transparent outline-none text-stone-900 dark:text-stone-100"
+                                    class="w-full bg-transparent p-3 text-app-text outline-none"
                                 />
 
                                 <button
                                     @click="copy()"
-                                    class="px-3 transition-colors border-l cursor-pointer border-stone-200 dark:border-stone-600"
+                                    class="cursor-pointer border-l border-app-border px-3 transition-colors"
                                 >
                                     <flux:icon.document-duplicate x-show="!copied" variant="outline"></flux:icon>
                                     <flux:icon.check
                                         x-show="copied"
                                         variant="solid"
-                                        class="text-green-500"
+                                        class="text-success"
                                     ></flux:icon>
                                 </button>
                             @endempty

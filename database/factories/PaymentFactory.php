@@ -25,6 +25,8 @@ class PaymentFactory extends Factory
             'status' => 'paid',
             'method' => 'bank_transfer',
             'paid_at' => now(),
+            'period_starts_at' => now(),
+            'period_ends_at' => now()->addMonth(),
         ];
     }
 }

@@ -4,33 +4,54 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-app-page text-app-text">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-app-border bg-app-sidebar">
+        <flux:sidebar sticky collapsible="mobile" class="flex h-screen flex-col border-e border-app-border bg-app-sidebar">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+                <x-app-logo
+                    :sidebar="true"
+                    :href="auth()->user()->is_platform_owner ? route('owner.dashboard') : route('dashboard')"
+                    wire:navigate
+                />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
+            <flux:sidebar.nav class="flex-1">
+                <flux:sidebar.group :heading="auth()->user()->is_platform_owner ? __('Platform') : __('Clinic')" class="grid">
+                    @if (auth()->user()->is_platform_owner)
+                        <flux:sidebar.item icon="home" :href="route('owner.dashboard')" :current="request()->routeIs('owner.dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="building-office-2" :href="route('owner.clinics.index')" :current="request()->routeIs('owner.clinics.*')" wire:navigate>
+                            {{ __('Clinics') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="credit-card" :href="route('owner.plans.index')" :current="request()->routeIs('owner.plans.*')" wire:navigate>
+                            {{ __('Plans') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="banknotes" :href="route('owner.payments.index')" :current="request()->routeIs('owner.payments.*')" wire:navigate>
+                            {{ __('Payments') }}
+                        </flux:sidebar.item>
+                    @else
+                        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
+            @unless (auth()->user()->is_platform_owner)
+                <flux:sidebar.nav>
+                    <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+                        {{ __('Repository') }}
+                    </flux:sidebar.item>
 
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
+                    <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
+                        {{ __('Documentation') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.nav>
+            @endunless
 
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+            <x-desktop-user-menu class="mt-auto hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->

@@ -14,6 +14,13 @@ class SetCurrentClinic
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->routeIs('owner.clinics.show') && Auth::user()?->is_platform_owner) {
+            setPermissionsTeamId(null);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            return $next($request);
+        }
+
         // Check if the URL has a clinic slug (e.g., /clinic/al-amal/...)
         $clinicSlug = $request->route('clinic');
 

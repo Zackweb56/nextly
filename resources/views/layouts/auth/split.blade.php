@@ -3,10 +3,10 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-warm-white antialiased dark:bg-navy">
+    <body class="min-h-screen bg-app-page text-app-text antialiased">
         <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800">
-                <div class="absolute inset-0 bg-navy"></div>
+            <div class="relative hidden h-full flex-col border-e border-app-border bg-app-sidebar p-10 text-app-text lg:flex">
+                <div class="absolute inset-0 bg-app-sidebar"></div>
                 <a href="{{ route('home') }}" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
                     <span class="flex h-10 w-10 items-center justify-center rounded-md">
                         <x-app-logo-icon class="me-2 h-7 rounded-md object-cover" />
