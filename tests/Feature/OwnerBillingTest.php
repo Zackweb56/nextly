@@ -843,9 +843,9 @@ it('calculates the current billing period correctly when prepayment extends ends
         'created_at' => now()->subDays(2),
     ]);
 
-    $expectedStart = $currentStart->format('M j, Y');
-    $expectedEnd = $currentEnd->format('M j, Y');
-    $expectedNextEnd = $prepaidEndsAt->format('M j, Y');
+    $expectedStart = $currentStart->format('d/m/Y');
+    $expectedEnd = $currentEnd->format('d/m/Y');
+    $expectedNextEnd = $prepaidEndsAt->format('d/m/Y');
 
     Livewire::actingAs($owner)
         ->test('pages::owner.clinics.show', ['clinic' => $clinic])
@@ -947,8 +947,8 @@ it('displays current billing period when subscription is cancelled but ends_at i
     $plan = Plan::factory()->create(['billing_interval' => 'monthly']);
 
     $futureEndsAt = now()->addDays(20)->startOfSecond();
-    $expectedStart = $futureEndsAt->copy()->subMonth()->format('M j, Y');
-    $expectedEnd = $futureEndsAt->format('M j, Y');
+    $expectedStart = $futureEndsAt->copy()->subMonth()->format('d/m/Y');
+    $expectedEnd = $futureEndsAt->format('d/m/Y');
 
     $subscription = Subscription::factory()->create([
         'clinic_id' => $clinic->id,
@@ -1001,7 +1001,7 @@ it('displays billed period for payments in the payment history table', function 
         'paid_at' => $startsAt->copy()->addMinutes(5),
     ]);
 
-    $expectedPeriod = $startsAt->format('M j, Y').' - '.$endsAt->format('M j, Y');
+    $expectedPeriod = $startsAt->format('d/m/Y').' - '.$endsAt->format('d/m/Y');
 
     Livewire::actingAs($owner)
         ->test('pages::owner.clinics.show', ['clinic' => $clinic])
@@ -1112,9 +1112,9 @@ it('displays Assigned At and Current Billing Period in the clinic subscription c
         'period_ends_at' => $currentPeriodEnd,
     ]);
 
-    $expectedAssignedAt = $firstSubscribedAt->format('M j, Y');
-    $expectedPeriodStart = $currentPeriodStart->format('M j, Y');
-    $expectedPeriodEnd = $currentPeriodEnd->format('M j, Y');
+    $expectedAssignedAt = $firstSubscribedAt->format('d/m/Y');
+    $expectedPeriodStart = $currentPeriodStart->format('d/m/Y');
+    $expectedPeriodEnd = $currentPeriodEnd->format('d/m/Y');
 
     Livewire::actingAs($owner)
         ->test('pages::owner.clinics.show', ['clinic' => $clinic])
@@ -1146,7 +1146,7 @@ it('blocks opening create payment modal when clinic already has a pending invoic
     Livewire::actingAs($owner)
         ->test('pages::owner.clinics.show', ['clinic' => $clinic])
         ->call('openCreatePayment')
-        ->assertHasErrors(['createPaymentAmount' => 'This clinic already has a pending invoice. Please mark it as paid first.']);
+        ->assertHasErrors(['createPaymentAmount' => __('This clinic already has a pending invoice. Please mark it as paid first.')]);
 });
 
 it('blocks creating a payment invoice when clinic is trialing', function () {
@@ -1165,7 +1165,7 @@ it('blocks creating a payment invoice when clinic is trialing', function () {
     Livewire::actingAs($owner)
         ->test('pages::owner.clinics.show', ['clinic' => $clinic])
         ->call('openCreatePayment')
-        ->assertHasErrors(['createPaymentAmount' => 'Cannot create payment for a trialing clinic.']);
+        ->assertHasErrors(['createPaymentAmount' => __('Cannot create payment for a trialing clinic.')]);
 });
 
 it('creates a pending payment invoice from the clinic details modal and allows marking as paid', function () {
