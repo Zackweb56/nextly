@@ -8,16 +8,15 @@ test('the home page redirects guests to login', function () {
 });
 
 test('guests are redirected to the login page', function () {
-    $response = $this->get(route('dashboard'));
-    $response->assertRedirect(route('login'));
+    $this->get(route('dashboard'))
+        ->assertRedirect(route('login'));
 });
 
-test('authenticated users can visit the dashboard', function () {
+test('authenticated users without a clinic receive a forbidden error', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $this->get(route('dashboard'))->assertForbidden();
 });
 
 test('platform owners visiting the clinic dashboard are redirected to the owner dashboard', function () {

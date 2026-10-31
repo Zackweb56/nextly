@@ -24,7 +24,7 @@ it('allows access with an active subscription', function () {
         'status' => 'active',
     ]);
 
-    $this->get(route('dashboard'))->assertOk();
+    $this->get(route('dashboard'))->assertRedirect(route('clinic.users.index', ['clinic' => $this->clinic->slug]));
 });
 
 it('allows access with a trialing subscription', function () {
@@ -34,7 +34,7 @@ it('allows access with a trialing subscription', function () {
         'trial_ends_at' => now()->addDay(),
     ]);
 
-    $this->get(route('dashboard'))->assertOk();
+    $this->get(route('dashboard'))->assertRedirect(route('clinic.users.index', ['clinic' => $this->clinic->slug]));
 });
 
 it('blocks access when the subscription is past due', function () {
@@ -44,7 +44,7 @@ it('blocks access when the subscription is past due', function () {
     ]);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'));
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]));
 });
 
 it('blocks access when an active subscription has expired', function () {
@@ -55,7 +55,7 @@ it('blocks access when an active subscription has expired', function () {
     ]);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'));
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]));
 
     $this->clinic->refresh();
 
@@ -70,7 +70,7 @@ it('blocks access and sets status to past due when trial ends at is in the past'
     ]);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'));
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]));
 
     $this->clinic->refresh();
 
@@ -139,7 +139,7 @@ it('allows access when subscription is cancelled but ends_at is in the future', 
         'cancelled_at' => now(),
     ]);
 
-    $this->get(route('dashboard'))->assertOk();
+    $this->get(route('dashboard'))->assertRedirect(route('clinic.users.index', ['clinic' => $this->clinic->slug]));
 });
 
 it('blocks access when subscription is cancelled and ends_at is in the past', function () {
@@ -151,7 +151,7 @@ it('blocks access when subscription is cancelled and ends_at is in the past', fu
     ]);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'));
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]));
 
     $this->clinic->refresh();
 
@@ -160,11 +160,11 @@ it('blocks access when subscription is cancelled and ends_at is in the past', fu
 
 it('blocks access when the clinic has no subscription', function () {
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'));
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]));
 });
 
 it('allows clinic staff to view the suspended billing page', function () {
-    $this->get(route('billing.suspended'))->assertOk();
+    $this->get(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]))->assertOk();
 });
 
 it('allows platform owners through without an active subscription', function () {
@@ -183,7 +183,7 @@ it('blocks clinic admin access when the clinic is suspended even with an active 
     $this->clinic->update(['is_active' => false]);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'))
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]))
         ->assertSessionHas('clinic_suspended', true);
 });
 
@@ -197,11 +197,11 @@ it('unblocks clinic admin access when the clinic is reactivated', function () {
     $this->clinic->update(['is_active' => false]);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('billing.suspended'));
+        ->assertRedirect(route('clinic.billing.suspended', ['clinic' => $this->clinic->slug]));
 
     // Clinic is activated -> unblocked
     $this->clinic->update(['is_active' => true]);
 
     $this->get(route('dashboard'))
-        ->assertOk();
+        ->assertRedirect(route('clinic.users.index', ['clinic' => $this->clinic->slug]));
 });

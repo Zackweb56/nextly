@@ -21,20 +21,24 @@ class SetCurrentClinic
             return $next($request);
         }
 
-        // Check if the URL has a clinic slug (e.g., /clinic/al-amal/...)
-        $clinicSlug = $request->route('clinic');
+        // Check if the URL has a clinic parameter (e.g., /{clinic:slug}/...)
+        $clinicParam = $request->route('clinic');
 
-        if ($clinicSlug) {
-            // If the route has a clinic parameter, force the session to switch to it
-            // ONLY if the user actually belongs to it.
-            if ($clinicSlug instanceof Clinic) {
-                $clinicId = $clinicSlug->id;
-            } else {
-                $clinicId = Clinic::where('slug', $clinicSlug)->value('id');
+        if ($clinicParam) {
+            if ($request->routeIs('owner.*') && Auth::user()?->is_platform_owner) {
+                return $next($request);
             }
 
-            if ($clinicId && Auth::user()->clinics()->where('clinic_id', $clinicId)->exists()) {
-                CurrentClinic::set($clinicId);
+            if (! Auth::check()) {
+                return $next($request);
+            }
+
+            $clinicId = $clinicParam instanceof Clinic
+                ? $clinicParam->id
+                : Clinic::where('slug', $clinicParam)->value('id');
+
+            if ($clinicId && Auth::user()->clinics()->where('clinics.id', $clinicId)->exists()) {
+                CurrentClinic::set((int) $clinicId);
             } else {
                 abort(403, 'You do not have access to this clinic.');
             }

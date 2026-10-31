@@ -161,16 +161,21 @@ new #[Title('Clinics')] class extends Component {
                     $user->unsetRelation('roles');
                     $user->unsetRelation('permissions');
 
+                    // Get permissions and group them
+                    $permissions = $user->getAllPermissions();
+                    
+                    $groupedPermissions = $permissions->groupBy(function ($permission) {
+                        return $permission->group ?? 'general';
+                    })->map(function ($group) {
+                        return $group->pluck('name')->sort()->values()->all();
+                    })->all();
+
                     return [
                         'name' => $user->name,
                         'email' => $user->email,
                         'roles' => $user->getRoleNames()->values()->all(),
-                        'permissions' => $user->getAllPermissions()
-                            ->pluck('name')
-                            ->unique()
-                            ->sort()
-                            ->values()
-                            ->all(),
+                        'permissions' => $permissions->pluck('name')->unique()->sort()->values()->all(),
+                        'grouped_permissions' => $groupedPermissions,
                     ];
                 })
                 ->all();
@@ -375,53 +380,74 @@ new #[Title('Clinics')] class extends Component {
 
     <flux:modal name="clinic-members-modal" class="w-full max-w-2xl">
         <div class="space-y-6">
+            {{-- Header --}}
             <div>
                 <flux:heading size="lg">
-                    {{ __('Users and permissions: :clinic', ['clinic' => $selectedClinicNameForMembers ?? '']) }}
+                    {{ __('Utilisateurs et permissions : :clinic', ['clinic' => $selectedClinicNameForMembers ?? '']) }}
                 </flux:heading>
                 <flux:text class="mt-1">
-                    {{ trans_choice('{0} No users assigned|{1} 1 user assigned|[2,*] :count users assigned', count($membersList), ['count' => count($membersList)]) }}
+                    {{ trans_choice('{0} Aucun utilisateur assigné|{1} 1 utilisateur assigné|[2,*] :count utilisateurs assignés', count($membersList), ['count' => count($membersList)]) }}
                 </flux:text>
             </div>
 
-            <div class="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+            {{-- Members List --}}
+            <div class="max-h-[60vh] space-y-4 overflow-y-auto pr-2">
                 @forelse ($membersList as $member)
-                    <article class="app-member-card">
-                        <div class="min-w-0">
-                            <h3 class="truncate font-medium">{{ $member['name'] }}</h3>
-                            <p class="mt-0.5 break-all text-sm text-app-muted">{{ $member['email'] }}</p>
-                        </div>
-                        <section class="mt-4">
-                            <h4 class="app-member-section-title">{{ __('Roles') }}</h4>
-                            <div class="app-member-badges">
+                    <article class="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900/50 shadow-sm space-y-4">
+                        
+                        {{-- User Header --}}
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800/80 pb-4">
+                            <div class="min-w-0">
+                                <h3 class="truncate font-bold text-zinc-900 dark:text-white">{{ $member['name'] }}</h3>
+                                <p class="mt-0.5 break-all text-sm text-zinc-500 dark:text-zinc-400">{{ $member['email'] }}</p>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 shrink-0">
                                 @forelse ($member['roles'] as $role)
-                                    <span class="app-badge app-badge-neutral">{{ $role }}</span>
+                                    <span class="app-badge app-badge-primary shadow-sm">{{ __(ucfirst($role)) }}</span>
                                 @empty
-                                    <span class="text-sm text-app-muted">{{ __('No roles assigned') }}</span>
+                                    <span class="text-xs text-zinc-400 italic">{{ __('Aucun rôle') }}</span>
                                 @endforelse
                             </div>
-                        </section>
-                        <section class="mt-4">
-                            <h4 class="app-member-section-title">{{ __('Permissions') }}</h4>
-                            <div class="app-member-badges">
-                                @forelse ($member['permissions'] as $permission)
-                                    <span class="app-badge app-badge-info">{{ $permission }}</span>
-                                @empty
-                                    <span class="text-sm text-app-muted">{{ __('No permissions assigned') }}</span>
-                                @endforelse
-                            </div>
-                        </section>
+                        </div>
+
+                        {{-- Permissions Grouped --}}
+                        <div>
+                            <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">{{ __('Permissions Actives') }}</h4>
+                            
+                            @if(count($member['permissions']) > 0)
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    @foreach ($member['grouped_permissions'] as $group => $permissions)
+                                        <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/40 p-3 border border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5">
+                                                <flux:icon icon="folder" class="size-3.5 text-zinc-400" />
+                                                {{ __(ucfirst($group)) }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @foreach ($permissions as $permission)
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                                                        {{ __(str_replace(['_', '.'], ' ', $permission)) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-sm text-zinc-500 italic">{{ __('Aucune permission assignée.') }}</p>
+                            @endif
+                        </div>
                     </article>
                 @empty
-                    <p class="py-8 text-center text-sm text-app-muted">
-                        {{ __('No users are assigned to this clinic.') }}
+                    <p class="py-8 text-center text-sm text-zinc-500">
+                        {{ __('Aucun utilisateur n\'est assigné à cette clinique.') }}
                     </p>
                 @endforelse
             </div>
 
-            <div class="flex justify-end">
+            {{-- Footer --}}
+            <div class="flex justify-end pt-2">
                 <flux:modal.close>
-                    <flux:button variant="ghost">{{ __('Close') }}</flux:button>
+                    <flux:button variant="ghost">{{ __('Fermer') }}</flux:button>
                 </flux:modal.close>
             </div>
         </div>

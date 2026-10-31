@@ -6,17 +6,38 @@
     <body class="min-h-screen bg-app-page text-app-text">
         <flux:sidebar sticky collapsible="mobile" class="flex h-screen flex-col border-e border-app-border bg-app-sidebar">
             <flux:sidebar.header>
-                <x-app-logo
-                    :sidebar="true"
-                    :href="auth()->user()->is_platform_owner ? route('owner.dashboard') : route('dashboard')"
-                    wire:navigate
-                />
+                @php
+                    $isPlatformOwner = auth()->user()->is_platform_owner;
+                    $currentClinic = $isPlatformOwner ? null : \App\Support\CurrentClinic::get();
+                @endphp
+
+                @if ($currentClinic)
+                    <flux:sidebar.brand
+                        :name="$currentClinic->name"
+                        :href="route('clinic.dashboard', ['clinic' => $currentClinic->slug])"
+                        wire:navigate
+                    >
+                        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center">
+                            @if ($currentClinic->logo_path)
+                                <img src="{{ Storage::url($currentClinic->logo_path) }}" alt="{{ $currentClinic->name }}" class="size-8 rounded-md object-cover">
+                            @else
+                                <img src="{{ asset('assets/logo_branding/nextly_primary.jpg') }}" alt="{{ $currentClinic->name }}" class="size-8 rounded-md object-cover">
+                            @endif
+                        </x-slot>
+                    </flux:sidebar.brand>
+                @else
+                    <x-app-logo
+                        :sidebar="true"
+                        :href="$isPlatformOwner ? route('owner.dashboard') : route('dashboard')"
+                        wire:navigate
+                    />
+                @endif
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav class="flex-1">
-                <flux:sidebar.group :heading="auth()->user()->is_platform_owner ? __('Platform') : __('Clinic')" class="grid">
-                    @if (auth()->user()->is_platform_owner)
+                @if ($isPlatformOwner)
+                    <flux:sidebar.group :heading="__('Platform')" class="grid">
                         <flux:sidebar.item icon="home" :href="route('owner.dashboard')" :current="request()->routeIs('owner.dashboard')" wire:navigate>
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
@@ -29,27 +50,117 @@
                         <flux:sidebar.item icon="banknotes" :href="route('owner.payments.index')" :current="request()->routeIs('owner.payments.*')" wire:navigate>
                             {{ __('Payments') }}
                         </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @else
+                    @php
+                        $clinicSlug = $currentClinic?->slug;
+                    @endphp
+
+                    @if ($clinicSlug)
+                        <flux:sidebar.group class="grid">
+                            <flux:sidebar.item
+                                icon="home"
+                                :href="route('clinic.dashboard', ['clinic' => $clinicSlug])"
+                                :current="request()->routeIs('clinic.dashboard')"
+                                wire:navigate
+                            >
+                                {{ __('Dashboard') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+
+                        @if (auth()->user()->hasPermissionTo('users.view') || auth()->user()->hasPermissionTo('roles.view'))
+                            <flux:sidebar.group :heading="__('Gestion')" class="grid">
+                                @if (auth()->user()->hasPermissionTo('users.view'))
+                                    <flux:sidebar.item
+                                        icon="users"
+                                        :href="route('clinic.users.index', ['clinic' => $clinicSlug])"
+                                        :current="request()->routeIs('clinic.users.*')"
+                                        wire:navigate
+                                    >
+                                        {{ __('Utilisateurs') }}
+                                    </flux:sidebar.item>
+                                @endif
+                                @if (auth()->user()->hasPermissionTo('roles.view'))
+                                    <flux:sidebar.item
+                                        icon="shield-check"
+                                        :href="route('clinic.roles.index', ['clinic' => $clinicSlug])"
+                                        :current="request()->routeIs('clinic.roles.*')"
+                                        wire:navigate
+                                    >
+                                        {{ __('Rôles') }}
+                                    </flux:sidebar.item>
+                                @endif
+                            </flux:sidebar.group>
+                        @endif
+
+                        @if (auth()->user()->hasPermissionTo('services.view') || auth()->user()->hasPermissionTo('patients.view') || auth()->user()->hasPermissionTo('queue.view') || auth()->user()->hasPermissionTo('appointments.view'))
+                            <flux:sidebar.group :heading="__('Clinique')" class="grid">
+                                @if (auth()->user()->hasPermissionTo('services.view'))
+                                    <flux:sidebar.item
+                                        icon="briefcase"
+                                        :href="url('/' . $clinicSlug . '/services')"
+                                        :current="request()->is($clinicSlug . '/services*')"
+                                        wire:navigate
+                                    >
+                                        {{ __('Services') }}
+                                    </flux:sidebar.item>
+                                @endif
+                                @if (auth()->user()->hasPermissionTo('patients.view'))
+                                    <flux:sidebar.item
+                                        icon="user-group"
+                                        :href="url('/' . $clinicSlug . '/patients')"
+                                        :current="request()->is($clinicSlug . '/patients*')"
+                                        wire:navigate
+                                    >
+                                        {{ __('Patients') }}
+                                    </flux:sidebar.item>
+                                @endif
+                                @if (auth()->user()->hasPermissionTo('queue.view'))
+                                    <flux:sidebar.item
+                                        icon="queue-list"
+                                        :href="url('/' . $clinicSlug . '/queue')"
+                                        :current="request()->is($clinicSlug . '/queue*')"
+                                        wire:navigate
+                                    >
+                                        {{ __("File d'attente") }}
+                                    </flux:sidebar.item>
+                                @endif
+                                @if (auth()->user()->hasPermissionTo('appointments.view'))
+                                    <flux:sidebar.item
+                                        icon="calendar"
+                                        :href="url('/' . $clinicSlug . '/appointments')"
+                                        :current="request()->is($clinicSlug . '/appointments*')"
+                                        wire:navigate
+                                    >
+                                        {{ __('Rendez-vous') }}
+                                    </flux:sidebar.item>
+                                @endif
+                            </flux:sidebar.group>
+                        @endif
+
+                        @if (auth()->user()->hasPermissionTo('settings.manage'))
+                            <flux:sidebar.group :heading="__('Paramètres')" class="grid">
+                                <flux:sidebar.item
+                                    icon="cog-6-tooth"
+                                    :href="url('/' . $clinicSlug . '/settings')"
+                                    :current="request()->is($clinicSlug . '/settings*')"
+                                    wire:navigate
+                                >
+                                    {{ __('Paramètres de la clinique') }}
+                                </flux:sidebar.item>
+                            </flux:sidebar.group>
+                        @endif
                     @else
-                        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Dashboard') }}
-                        </flux:sidebar.item>
+                        <flux:sidebar.group :heading="__('Clinique')" class="grid">
+                            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                                {{ __('Dashboard') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
                     @endif
-                </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
-
-            @unless (auth()->user()->is_platform_owner)
-                <flux:sidebar.nav>
-                    <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                        {{ __('Repository') }}
-                    </flux:sidebar.item>
-
-                    <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                        {{ __('Documentation') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.nav>
-            @endunless
 
             <x-desktop-user-menu class="mt-auto hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
@@ -116,6 +227,26 @@
                 <flux:toast />
             </flux:toast.group>
         @endpersist
+
+        @if (session('toast'))
+            @php
+                $toast = session('toast');
+            @endphp
+            <div
+                x-data
+                x-init="
+                    $nextTick(() => {
+                        $flux.toast(
+                            {{ json_encode($toast['text'] ?? '') }},
+                            {
+                                heading: {{ json_encode($toast['heading'] ?? null) }},
+                                variant: {{ json_encode($toast['variant'] ?? 'danger') }}
+                            }
+                        );
+                    })
+                "
+            ></div>
+        @endif
 
         @fluxScripts
     </body>

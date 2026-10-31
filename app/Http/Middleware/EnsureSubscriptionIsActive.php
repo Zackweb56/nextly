@@ -18,51 +18,30 @@ class EnsureSubscriptionIsActive
             return $next($request);
         }
 
-        $sessionClinicId = session('current_clinic_id');
-        if ($sessionClinicId) {
-            $sessionClinic = $user->clinics()
-                ->where('clinics.id', $sessionClinicId)
-                ->wherePivot('is_active', true)
-                ->first();
-
-            if ($sessionClinic && ! $sessionClinic->is_active) {
-                if ($request->routeIs('billing.*', 'logout')) {
-                    return $next($request);
-                }
-
-                return redirect()->route('billing.suspended')
-                    ->with('error', 'Your clinic has been suspended. Please contact support.')
-                    ->with('clinic_suspended', true);
-            }
-        }
-
         $clinic = CurrentClinic::get();
 
+        // If no clinic is found in the session, check if the user has ANY active clinic
         if (! $clinic) {
-            $suspendedClinic = $user->clinics()
-                ->wherePivot('is_active', true)
-                ->where('clinics.is_active', false)
-                ->first();
-
-            if ($suspendedClinic) {
-                if ($request->routeIs('billing.*', 'logout')) {
+            $firstClinic = $user->clinics()->wherePivot('is_active', true)->first();
+            if ($firstClinic) {
+                // If they have a clinic, use it
+                $clinic = $firstClinic;
+            } else {
+                // If they have no clinic at all, they shouldn't be here
+                if ($request->routeIs('billing.*', 'logout', 'clinic.billing.*', 'settings.*', 'profile.*', 'security.*', 'appearance.*', 'verification.*', 'password.*')) {
                     return $next($request);
                 }
-
-                return redirect()->route('billing.suspended')
-                    ->with('error', 'Your clinic has been suspended. Please contact support.')
-                    ->with('clinic_suspended', true);
+                abort(403, 'No active clinic assigned.');
             }
-
-            return $next($request);
         }
 
+        // Check if clinic is suspended by the owner
         if (! $clinic->is_active) {
-            if ($request->routeIs('billing.*', 'logout')) {
+            if ($request->routeIs('billing.*', 'logout', 'clinic.billing.*', 'settings.*', 'profile.*', 'security.*', 'appearance.*', 'verification.*', 'password.*')) {
                 return $next($request);
             }
 
-            return redirect()->route('billing.suspended')
+            return redirect()->route('clinic.billing.suspended', ['clinic' => $clinic->slug])
                 ->with('error', 'Your clinic has been suspended. Please contact support.')
                 ->with('clinic_suspended', true);
         }
@@ -95,11 +74,11 @@ class EnsureSubscriptionIsActive
             && ($subscription->isActive() || $subscription->isTrialing() || $subscription->onGracePeriod());
 
         if (! $isValid) {
-            if ($request->routeIs('billing.*', 'logout')) {
+            if ($request->routeIs('billing.*', 'logout', 'clinic.billing.*', 'settings.*', 'profile.*', 'security.*', 'appearance.*', 'verification.*', 'password.*')) {
                 return $next($request);
             }
 
-            return redirect()->route('billing.suspended')
+            return redirect()->route('clinic.billing.suspended', ['clinic' => $clinic->slug])
                 ->with('error', 'Your clinic subscription is inactive. Please contact support.');
         }
 

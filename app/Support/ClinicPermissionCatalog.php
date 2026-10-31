@@ -1,55 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
 class ClinicPermissionCatalog
 {
     /**
-     * @return list<string>
+     * @return array<string, list<string>>
      */
-    public static function all(): array
+    public static function grouped(): array
     {
         return [
-            'dashboard.view',
-            'appointments.view',
-            'appointments.create',
-            'appointments.update',
-            'appointments.cancel',
-            'patients.view',
-            'patients.create',
-            'patients.update',
-            'queue.view',
-            'queue.manage',
-            'services.view',
-            'services.create',
-            'services.update',
-            'services.delete',
-            'staff.view',
-            'staff.invite',
-            'staff.update',
-            'roles.view',
-            'roles.create',
-            'roles.update',
-            'roles.delete',
-            'clinic.settings.update',
-            'subscriptions.view',
-            'payments.view',
+            'users' => ['users.view', 'users.create', 'users.update', 'users.delete'],
+            'roles' => ['roles.view', 'roles.manage'],
+            'queue' => ['queue.view', 'queue.manage'],
+            'appointments' => ['appointments.view', 'appointments.create', 'appointments.update', 'appointments.cancel'],
+            'patients' => ['patients.view', 'patients.create', 'patients.update'],
+            'services' => ['services.view', 'services.create', 'services.update', 'services.delete'],
+            'settings' => ['settings.manage'],
+            'billing' => ['billing.view'],
+            'dashboard' => [
+                'dashboard.stats',
+                'dashboard.queue',
+                'dashboard.appointments',
+            ],
         ];
     }
 
     /**
      * @return list<string>
      */
-    public static function receptionist(): array
+    public static function all(): array
     {
-        return [
-            'appointments.view',
-            'appointments.create',
-            'appointments.update',
-            'patients.view',
-            'patients.create',
-            'queue.view',
-            'queue.manage',
-        ];
+        $all = [];
+        foreach (self::grouped() as $permissions) {
+            foreach ($permissions as $permission) {
+                $all[] = $permission;
+            }
+        }
+
+        return array_values(array_unique($all));
     }
 }
